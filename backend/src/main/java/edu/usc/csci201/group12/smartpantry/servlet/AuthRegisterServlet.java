@@ -5,6 +5,7 @@ import edu.usc.csci201.group12.smartpantry.dao.UserStore;
 import edu.usc.csci201.group12.smartpantry.json.GsonProvider;
 import edu.usc.csci201.group12.smartpantry.json.JsonApiResponse;
 import edu.usc.csci201.group12.smartpantry.model.Guest;
+import edu.usc.csci201.group12.smartpantry.model.Member;
 import edu.usc.csci201.group12.smartpantry.model.User;
 import edu.usc.csci201.group12.smartpantry.recipe.RecipeRepository;
 import edu.usc.csci201.group12.smartpantry.security.PasswordHasher;
@@ -32,11 +33,15 @@ public final class AuthRegisterServlet extends AbstractJsonServlet {
         PasswordHasher hasher = (PasswordHasher) req.getServletContext().getAttribute(ContextKeys.PASSWORD_HASHER);
         RecipeRepository recipes = (RecipeRepository) req.getServletContext().getAttribute(ContextKeys.RECIPE_REPOSITORY);
 
-        final User guest;
+        final User account;
         try {
             String hash = hasher.hash(in.password());
-            guest = new Guest(in.username(), in.email(), hash, recipes);
-            store.save(guest);
+            if ("member".equalsIgnoreCase(in.accountType())) {
+                account = new Member(in.username(), in.email(), hash);
+            } else {
+                account = new Guest(in.username(), in.email(), hash, recipes);
+            }
+            store.save(account);
         } catch (IllegalArgumentException ex) {
             writeJson(resp, HttpServletResponse.SC_BAD_REQUEST, JsonApiResponse.fail(ex.getMessage()));
             return;
@@ -45,7 +50,7 @@ public final class AuthRegisterServlet extends AbstractJsonServlet {
             return;
         }
 
-        req.getSession(true).setAttribute(SessionAttributes.CURRENT_USER_ID, guest.getId());
-        writeOk(resp, Map.of("user", guest.toPublicView()));
+        req.getSession(true).setAttribute(SessionAttributes.CURRENT_USER_ID, account.getId());
+        writeOk(resp, Map.of("user", account.toPublicView()));
     }
 }
