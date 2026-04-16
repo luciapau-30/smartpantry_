@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Pantry - My Pantry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+
+    <nav class="bg-gray-800 shadow-md border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <div class="flex-shrink-0 flex items-center">
+                        <span class="font-bold text-2xl text-purple-500">Smart Pantry</span>
+                    </div>
+                    
+                    <div class="hidden sm:ml-8 sm:flex sm:space-x-8">
+                        <a href="index.html" class="text-gray-400 hover:text-purple-400 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-500 text-sm font-medium transition">
+                            Explore Recipes
+                        </a>
+                        <a href="pantry.html" class="text-white inline-flex items-center px-1 pt-1 border-b-2 border-purple-500 text-sm font-medium">
+                            My Pantry
+                        </a>
+                        <a href="recipes.html" class="text-gray-400 hover:text-purple-400 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-500 text-sm font-medium transition">
+                            My Recipes
+                        </a>
+                    </div>
+                </div>
+
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    <button onclick="toggleModal()" class="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition shadow-lg">
+                        Log In
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+        <div class="text-center pt-0">
+            <h1 class="text-4xl font-bold text-white tracking-tight">My Pantry</h1>
+            <p class="mt-4 text-gray-400">Pantry management tools coming soon!</p>
+        </div>
+    </main>
+
+    <!--Ui for the popup login-->
+    <div id="loginModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-800 border border-gray-700 w-full max-w-md rounded-xl shadow-2xl p-8 relative">
+            
+            <button onclick="toggleModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+
+            <h2 class="text-3xl font-bold text-white mb-6 text-center">Login</h2>
+
+            <form action="#" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Email Address</label>
+                    <input type="email" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+                </div>
+
+                <div>
+                    <div class="flex justify-between mb-2">
+                        <label class="text-sm font-medium text-gray-400">Password</label>
+                        <a href="#" class="text-xs text-purple-400 hover:text-purple-300">Forgot Password?</a>
+                    </div>
+                    <input type="password" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+                </div>
+
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition shadow-lg">
+                    Sign In
+                </button>
+
+                <p class="text-center text-gray-400 text-sm">
+                    Don't have an account? <a href="#" class="text-purple-400 hover:underline">Sign up</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!--Basically just a script to close the popup-->
+    <script>
+        function toggleModal() {
+            const modal = document.getElementById('loginModal');
+            modal.classList.toggle('hidden');
+        }
+
+        // Close popup if user clicks outside the box
+        window.onclick = function(event) {
+            const modal = document.getElementById('loginModal');
+            if (event.target == modal) {
+                toggleModal();
+            }
+        }
+    </script>
+</body>
+</html>
