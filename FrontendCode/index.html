@@ -1,101 +1,754 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Pantry - Explore Recipes</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Pantry - Explore Recipes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    [data-hidden="true"] { display: none !important; }
+    .glass {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(10px);
+    }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen">
-
-    <nav class="bg-gray-800 shadow-md border-b border-gray-700">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center space-x-8">
-                    <div class="flex-shrink-0 flex items-center">
-                        <span class="font-bold text-2xl text-purple-500">Smart Pantry</span>
-                    </div>
-                    
-                    <div class="hidden sm:ml-8 sm:flex sm:space-x-8">
-                        <a href="index.html" class="text-white inline-flex items-center px-1 pt-1 border-b-2 border-purple-500 text-sm font-medium">
-                            Explore Recipes
-                        </a>
-                        <a href="pantry.html" class="text-gray-400 hover:text-purple-400 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-500 text-sm font-medium transition">
-                            My Pantry
-                        </a>
-                        <a href="recipes.html" class="text-gray-400 hover:text-purple-400 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-500 text-sm font-medium transition">
-                            My Recipes
-                        </a>
-                    </div>
-                </div>
-
-                <div class="hidden sm:ml-6 sm:flex sm:items-center">
-                    <button onclick="toggleModal()" class="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition shadow-lg">
-                        Log In
-                    </button>
-                </div>
-            </div>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+  <nav class="bg-gray-900/95 shadow-md border-b border-gray-800 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex items-center space-x-8">
+          <div class="flex-shrink-0 flex items-center">
+            <span class="font-bold text-2xl text-purple-500">Smart Pantry</span>
+          </div>
+          <div class="hidden sm:flex sm:space-x-8">
+            <a href="index.html" class="text-white inline-flex items-center px-1 pt-1 border-b-2 border-purple-500 text-sm font-medium">Explore Recipes</a>
+            <a href="pantry.html" class="text-gray-400 hover:text-purple-400 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-600 text-sm font-medium transition">My Pantry</a>
+            <a href="recipes.html" class="text-gray-400 hover:text-purple-400 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-600 text-sm font-medium transition">My Recipes</a>
+          </div>
         </div>
-    </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-        <div class="text-center pt-0">
-            <h1 class="text-4xl font-bold text-white tracking-tight">Community Hub</h1>
-            <p class="mt-4 text-gray-400">Recipe discovery coming soon!</p>
+        <div class="hidden sm:flex sm:items-center sm:gap-3">
+          <span id="sessionLabel" class="text-xs text-gray-400 hidden md:inline">Guest view</span>
+          <button id="loginBtn" class="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition shadow-lg">
+            Log In
+          </button>
         </div>
-    </main>
-
-    <!--Ui for the popup login-->
-    <div id="loginModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-gray-800 border border-gray-700 w-full max-w-md rounded-xl shadow-2xl p-8 relative">
-            
-            <button onclick="toggleModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-
-            <h2 class="text-3xl font-bold text-white mb-6 text-center">Login</h2>
-
-            <form action="#" class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-400 mb-2">Email Address</label>
-                    <input type="email" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
-                </div>
-
-                <div>
-                    <div class="flex justify-between mb-2">
-                        <label class="text-sm font-medium text-gray-400">Password</label>
-                        <a href="#" class="text-xs text-purple-400 hover:text-purple-300">Forgot Password?</a>
-                    </div>
-                    <input type="password" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
-                </div>
-
-                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition shadow-lg">
-                    Sign In
-                </button>
-
-                <p class="text-center text-gray-400 text-sm">
-                    Don't have an account? <a href="#" class="text-purple-400 hover:underline">Sign up</a>
-                </p>
-            </form>
-        </div>
+      </div>
     </div>
+  </nav>
 
-    <!--Basically just a script to close the popup-->
-    <script>
-        function toggleModal() {
-            const modal = document.getElementById('loginModal');
-            modal.classList.toggle('hidden');
-        }
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div id="guestBanner" class="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+      Guest view: log in to save, like, dislike, and comment.
+    </div>
+    <section class="grid lg:grid-cols-[1.5fr_1fr] gap-6 items-stretch">
+      <div class="rounded-3xl border border-gray-800 bg-gradient-to-br from-gray-900 to-gray-950 p-6 sm:p-8 shadow-2xl">
+        <div class="flex flex-col gap-4">
+          <div>
+            <p class="text-purple-400 text-sm uppercase tracking-[0.2em]">Community Hub</p>
+            <h1 class="text-4xl sm:text-5xl font-black leading-tight mt-2">Discover what the community is cooking.</h1>
+            <p class="text-gray-400 mt-3 max-w-2xl">Browse trending recipes, filter by dietary needs, save favorites, and open any recipe to see threaded discussion, popularity, and pantry-matching suggestions.</p>
+          </div>
 
-         // Close popup if user clicks outside the box
-        window.onclick = function(event) {
-            const modal = document.getElementById('loginModal');
-            if (event.target == modal) {
-                toggleModal();
-            }
+          <div class="grid md:grid-cols-[1fr_auto] gap-3 mt-2">
+            <label class="flex items-center gap-3 rounded-2xl border border-gray-800 bg-gray-900 px-4 py-3">
+              <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.05-5.65a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input id="searchInput" type="text" placeholder="Search recipes, ingredients, cuisines, or creators..." class="w-full bg-transparent outline-none text-sm placeholder-gray-500" />
+            </label>
+            <button id="clearFiltersBtn" class="rounded-2xl border border-gray-800 bg-gray-900 px-5 py-3 text-sm font-semibold hover:bg-gray-800 transition">Clear</button>
+          </div>
+
+          <div class="flex flex-wrap gap-2 text-sm mt-1" id="quickFilters">
+            <button data-filter="Gluten Free" class="filter-chip rounded-full border border-gray-700 px-3 py-1.5 hover:border-purple-500 hover:text-purple-300 transition">Gluten Free</button>
+            <button data-filter="Peanut Allergy" class="filter-chip rounded-full border border-gray-700 px-3 py-1.5 hover:border-purple-500 hover:text-purple-300 transition">Peanut Allergy</button>
+            <button data-filter="Vegetarian" class="filter-chip rounded-full border border-gray-700 px-3 py-1.5 hover:border-purple-500 hover:text-purple-300 transition">Vegetarian</button>
+            <button data-filter="High Protein" class="filter-chip rounded-full border border-gray-700 px-3 py-1.5 hover:border-purple-500 hover:text-purple-300 transition">High Protein</button>
+            <button data-filter="Under 30 min" class="filter-chip rounded-full border border-gray-700 px-3 py-1.5 hover:border-purple-500 hover:text-purple-300 transition">Under 30 min</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="rounded-3xl border border-gray-800 bg-gray-900 p-6 shadow-2xl">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="text-gray-400 text-sm">Active filters</p>
+            <h2 class="text-2xl font-bold">Suggestions</h2>
+          </div>
+          <span class="text-xs rounded-full border border-purple-500/40 bg-purple-500/10 px-3 py-1 text-purple-300">Live demo</span>
+        </div>
+
+        <div class="space-y-4">
+          <label class="flex items-center justify-between gap-3 rounded-2xl border border-gray-800 bg-gray-950 px-4 py-3">
+            <span class="text-sm">Show only recipes that match my pantry</span>
+            <input id="pantryMatchToggle" type="checkbox" class="accent-purple-500 h-4 w-4" checked />
+          </label>
+          <label class="flex items-center justify-between gap-3 rounded-2xl border border-gray-800 bg-gray-950 px-4 py-3">
+            <span class="text-sm">Hide recipes with allergens</span>
+            <input id="allergyToggle" type="checkbox" class="accent-purple-500 h-4 w-4" checked />
+          </label>
+          <div class="rounded-2xl border border-gray-800 bg-gray-950 px-4 py-3">
+            <p class="text-xs uppercase tracking-wider text-gray-500 mb-2">My pantry preview</p>
+            <div id="pantryPreview" class="flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="grid lg:grid-cols-2 gap-6">
+      <div class="rounded-3xl border border-gray-800 bg-gray-900 p-6 shadow-xl">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="text-sm text-gray-400">Recent activity</p>
+            <h2 class="text-2xl font-bold">Trending Now</h2>
+          </div>
+          <span class="text-xs rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 px-3 py-1">Most active</span>
+        </div>
+        <div id="trendingGrid" class="grid sm:grid-cols-2 gap-4"></div>
+      </div>
+
+      <div class="rounded-3xl border border-gray-800 bg-gray-900 p-6 shadow-xl">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="text-sm text-gray-400">Top rated</p>
+            <h2 class="text-2xl font-bold">Top Recipes</h2>
+          </div>
+          <span class="text-xs rounded-full bg-yellow-500/10 text-yellow-300 border border-yellow-500/30 px-3 py-1">Highest likes</span>
+        </div>
+        <div id="topGrid" class="grid sm:grid-cols-2 gap-4"></div>
+      </div>
+    </section>
+
+    <section class="grid xl:grid-cols-[1.25fr_1fr] gap-6 items-start">
+      <div class="rounded-3xl border border-gray-800 bg-gray-900 p-6 shadow-xl">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <p class="text-sm text-gray-400">Browse results</p>
+            <h2 class="text-2xl font-bold">All Matching Recipes</h2>
+          </div>
+          <p id="resultCount" class="text-sm text-gray-400"></p>
+        </div>
+        <div id="resultsGrid" class="grid md:grid-cols-2 gap-4"></div>
+      </div>
+
+      <div class="space-y-6 sticky top-20">
+        <div class="rounded-3xl border border-gray-800 bg-gray-900 p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-sm text-gray-400">Selected recipe</p>
+              <h2 class="text-2xl font-bold">Recipe detail</h2>
+            </div>
+            <span id="selectedBadge" class="text-xs rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30 px-3 py-1">Open a card</span>
+          </div>
+
+          <div id="detailPanel" class="space-y-4">
+            <div class="rounded-2xl border border-dashed border-gray-700 bg-gray-950 p-5 text-gray-400 text-sm">
+              Click any recipe card to open comments, actions, and recommendation blocks.
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-3xl border border-gray-800 bg-gray-900 p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-sm text-gray-400">Personalized discovery</p>
+              <h2 class="text-2xl font-bold">More Like This</h2>
+            </div>
+            <span class="text-xs rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/30 px-3 py-1">RecScore</span>
+          </div>
+          <div id="moreLikeThis" class="space-y-3"></div>
+        </div>
+
+        <div class="rounded-3xl border border-gray-800 bg-gray-900 p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-sm text-gray-400">Matches from pantry</p>
+              <h2 class="text-2xl font-bold">In Your Pantry</h2>
+            </div>
+            <span class="text-xs rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-3 py-1">Best fit</span>
+          </div>
+          <div id="inYourPantry" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="loginModal" data-hidden="true" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-gray-800 border border-gray-700 w-full max-w-md rounded-2xl shadow-2xl p-8 relative">
+      <button id="closeLoginBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white transition" aria-label="Close login modal">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+
+      <h2 class="text-3xl font-bold text-white mb-2 text-center">Login</h2>
+      <p class="text-center text-gray-400 text-sm mb-6">Demo login for guest/member view states.</p>
+
+      <form id="loginForm" class="space-y-5">
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">Email Address</label>
+          <input id="loginEmail" type="email" required placeholder="ajprado@usc.edu" class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+        </div>
+
+        <div>
+          <div class="flex justify-between mb-2">
+            <label class="text-sm font-medium text-gray-400">Password</label>
+            <a href="#" class="text-xs text-purple-400 hover:text-purple-300">Forgot Password?</a>
+          </div>
+          <input id="loginPassword" type="password" required placeholder="••••••••" class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+        </div>
+
+        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition shadow-lg">
+          Sign In
+        </button>
+
+        <p class="text-center text-gray-400 text-sm">
+          Don't have an account? <a href="#" class="text-purple-400 hover:underline">Sign up</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const pantryItems = ["tomatoes", "eggs", "rice", "chicken", "spinach", "garlic", "bread", "milk"];
+
+    const recipes = [
+      {
+        id: 1,
+        title: "Sunset Pasta Primavera",
+        author: "Maya Chen",
+        cuisine: "Italian",
+        tags: ["Vegetarian", "Under 30 min", "Gluten Free"],
+        ingredients: ["tomatoes", "garlic", "spinach", "olive oil", "pasta"],
+        likes: 184,
+        dislikes: 9,
+        saves: 72,
+        comments: 26,
+        activity: 92,
+        rating: 4.8,
+        time: 25,
+        summary: "A bright weeknight pasta loaded with vegetables and a citrus finish.",
+        color: "from-pink-500 to-orange-500",
+        commentsThread: [
+          { user: "Jeffrey", text: "Made this with extra spinach and it was amazing.", replies: [{ user: "Maya Chen", text: "Love that variation!" }] },
+          { user: "Aria", text: "Quick, simple, and very filling.", replies: [] }
+        ]
+      },
+      {
+        id: 2,
+        title: "High-Protein Breakfast Wrap",
+        author: "David K.",
+        cuisine: "American",
+        tags: ["High Protein", "Under 30 min"],
+        ingredients: ["eggs", "spinach", "cheese", "tortilla"],
+        likes: 210,
+        dislikes: 12,
+        saves: 90,
+        comments: 18,
+        activity: 88,
+        rating: 4.9,
+        time: 12,
+        summary: "A fast breakfast wrap that works for busy mornings and meal prep.",
+        color: "from-emerald-500 to-teal-500",
+        commentsThread: [
+          { user: "Lucia", text: "Perfect after the gym.", replies: [{ user: "David K.", text: "Exactly the goal!" }] },
+          { user: "Maya", text: "I swapped cheddar for feta and it was great.", replies: [] }
+        ]
+      },
+      {
+        id: 3,
+        title: "Crispy Garlic Chicken Bowl",
+        author: "Nina Patel",
+        cuisine: "Fusion",
+        tags: ["High Protein", "Peanut Allergy"],
+        ingredients: ["chicken", "rice", "garlic", "broccoli"],
+        likes: 260,
+        dislikes: 8,
+        saves: 111,
+        comments: 41,
+        activity: 97,
+        rating: 4.9,
+        time: 28,
+        summary: "A savory bowl built for pantry ingredients and quick assembly.",
+        color: "from-cyan-500 to-blue-500",
+        commentsThread: [
+          { user: "Alijah", text: "This one fits the pantry-matching idea really well.", replies: [{ user: "Nina Patel", text: "That was the intention!" }] },
+          { user: "Zoe", text: "The garlic sauce is the best part.", replies: [] }
+        ]
+      },
+      {
+        id: 4,
+        title: "Gluten-Free Berry Yogurt Parfait",
+        author: "Sofia Rivera",
+        cuisine: "Breakfast",
+        tags: ["Gluten Free", "Vegetarian"],
+        ingredients: ["yogurt", "berries", "oats", "honey"],
+        likes: 148,
+        dislikes: 4,
+        saves: 64,
+        comments: 13,
+        activity: 77,
+        rating: 4.7,
+        time: 8,
+        summary: "A light no-cook option that looks great and takes minutes to make.",
+        color: "from-violet-500 to-fuchsia-500",
+        commentsThread: [
+          { user: "Keilani", text: "Great for meal prep jars.", replies: [] },
+          { user: "Sam", text: "I added chia seeds and it got even better.", replies: [{ user: "Sofia Rivera", text: "That sounds perfect." }] }
+        ]
+      },
+      {
+        id: 5,
+        title: "Creamy Tomato Soup",
+        author: "Jordan Lee",
+        cuisine: "Comfort Food",
+        tags: ["Vegetarian", "Under 30 min"],
+        ingredients: ["tomatoes", "garlic", "milk", "bread"],
+        likes: 172,
+        dislikes: 6,
+        saves: 85,
+        comments: 21,
+        activity: 81,
+        rating: 4.8,
+        time: 22,
+        summary: "A cozy soup that pairs with grilled cheese or toasted bread.",
+        color: "from-rose-500 to-red-500",
+        commentsThread: [
+          { user: "Alijah", text: "Could totally use this for 'In Your Pantry'.", replies: [] },
+          { user: "Jordan Lee", text: "That is the exact use case.", replies: [] }
+        ]
+      },
+      {
+        id: 6,
+        title: "Street-Style Veggie Rice",
+        author: "Chris Wu",
+        cuisine: "Asian",
+        tags: ["Peanut Allergy", "High Protein"],
+        ingredients: ["rice", "eggs", "spinach", "garlic"],
+        likes: 196,
+        dislikes: 11,
+        saves: 78,
+        comments: 24,
+        activity: 89,
+        rating: 4.7,
+        time: 19,
+        summary: "A flexible bowl that is easy to customize with whatever is in the fridge.",
+        color: "from-indigo-500 to-sky-500",
+        commentsThread: [
+          { user: "Avery", text: "This is a great base recipe.", replies: [{ user: "Chris Wu", text: "Exactly, change it as needed." }] },
+          { user: "Maria", text: "Added chili crisp instead of soy sauce.", replies: [] }
+        ]
+      }
+    ];
+
+    const state = {
+      search: "",
+      activeTags: new Set(),
+      pantryOnly: true,
+      allergySafe: true,
+      loggedIn: false,
+      selectedRecipeId: 3,
+      savedRecipes: new Set([1, 3]),
+      reactions: new Map(),
+      dynamicComments: new Map(),
+    };
+
+    const els = {
+      searchInput: document.getElementById('searchInput'),
+      resultCount: document.getElementById('resultCount'),
+      trendingGrid: document.getElementById('trendingGrid'),
+      topGrid: document.getElementById('topGrid'),
+      resultsGrid: document.getElementById('resultsGrid'),
+      detailPanel: document.getElementById('detailPanel'),
+      moreLikeThis: document.getElementById('moreLikeThis'),
+      inYourPantry: document.getElementById('inYourPantry'),
+      pantryPreview: document.getElementById('pantryPreview'),
+      pantryMatchToggle: document.getElementById('pantryMatchToggle'),
+      allergyToggle: document.getElementById('allergyToggle'),
+      loginModal: document.getElementById('loginModal'),
+      loginBtn: document.getElementById('loginBtn'),
+      closeLoginBtn: document.getElementById('closeLoginBtn'),
+      loginForm: document.getElementById('loginForm'),
+      sessionLabel: document.getElementById('sessionLabel'),
+      clearFiltersBtn: document.getElementById('clearFiltersBtn'),
+      selectedBadge: document.getElementById('selectedBadge'),
+      guestBanner: document.getElementById('guestBanner'),
+    };
+
+    function normalize(text) {
+      return (text || '').toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim();
+    }
+
+    function recipeMatchesPantry(recipe) {
+      const matches = recipe.ingredients.filter(i => pantryItems.includes(normalize(i)));
+      return matches.length / recipe.ingredients.length;
+    }
+
+    function recipeMatchesSearch(recipe) {
+      const q = normalize(state.search);
+      if (!q) return true;
+      const hay = [recipe.title, recipe.author, recipe.cuisine, recipe.summary, recipe.tags.join(' '), recipe.ingredients.join(' ')].map(normalize).join(' ');
+      return hay.includes(q);
+    }
+
+    function recipeMatchesTags(recipe) {
+      if (!state.activeTags.size) return true;
+      return [...state.activeTags].every(tag => recipe.tags.includes(tag));
+    }
+
+    function recipeMatchesAllergy(recipe) {
+      if (!state.allergySafe) return true;
+      // Demo assumption: Peanut Allergy filter hides recipes tagged with Peanut Allergy or peanut-like ingredients.
+      return !recipe.tags.includes('Peanut Allergy') && !normalize(recipe.ingredients.join(' ')).includes('peanut');
+    }
+
+    function visibleRecipes() {
+      return recipes.filter(r => {
+        const pantryFit = recipeMatchesPantry(r) >= 0.35 || !state.pantryOnly;
+        return pantryFit && recipeMatchesSearch(r) && recipeMatchesTags(r) && recipeMatchesAllergy(r);
+      });
+    }
+
+    function recScore(recipe) {
+      const pantryScore = recipeMatchesPantry(recipe);
+      const prefScore = recipe.tags.some(tag => ['Gluten Free', 'Vegetarian', 'High Protein'].includes(tag)) ? 0.22 : 0.08;
+      const popularity = Math.min(1, (recipe.likes - recipe.dislikes + recipe.comments) / 320);
+      return pantryScore * 0.55 + prefScore + popularity * 0.25 + (recipe.activity / 100) * 0.12;
+    }
+
+    function recipeCard(recipe, compact = false) {
+      const pantryScore = Math.round(recipeMatchesPantry(recipe) * 100);
+      const saved = state.savedRecipes.has(recipe.id);
+      const selected = recipe.id === state.selectedRecipeId ? 'ring-2 ring-purple-500/70' : '';
+      const badgeClass = saved ? 'bg-purple-500/15 text-purple-300 border-purple-500/30' : 'bg-gray-800 text-gray-300 border-gray-700';
+      return `
+        <article class="group rounded-3xl border border-gray-800 bg-gray-950 overflow-hidden hover:border-purple-500/40 hover:shadow-2xl transition cursor-pointer ${selected}" data-recipe-id="${recipe.id}">
+          <div class="h-28 bg-gradient-to-br ${recipe.color} relative">
+            <div class="absolute inset-0 bg-black/15"></div>
+            <div class="absolute bottom-3 left-3 flex gap-2 flex-wrap">
+              ${recipe.tags.slice(0, 2).map(tag => `<span class="text-[11px] rounded-full border border-white/20 bg-black/25 px-2 py-1 backdrop-blur-sm">${tag}</span>`).join('')}
+            </div>
+          </div>
+          <div class="p-4 space-y-3">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h3 class="font-bold text-lg leading-tight">${recipe.title}</h3>
+                <p class="text-sm text-gray-400 mt-1">by ${recipe.author} · ${recipe.cuisine}</p>
+              </div>
+              <span class="text-xs rounded-full border ${badgeClass} px-2 py-1 whitespace-nowrap">${saved ? 'Saved' : 'Save'}</span>
+            </div>
+            <p class="text-sm text-gray-400 line-clamp-2">${recipe.summary}</p>
+            <div class="flex items-center justify-between text-sm text-gray-400">
+              <span>⭐ ${recipe.rating.toFixed(1)} · ${recipe.likes} likes</span>
+              <span>${recipe.time} min</span>
+            </div>
+            <div class="flex items-center gap-2 justify-between">
+              <div class="text-xs text-gray-500">Pantry match ${pantryScore}%</div>
+              <button class="open-recipe-btn rounded-full bg-purple-600 px-3 py-2 text-xs font-semibold text-white hover:bg-purple-700 transition">Open</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function reactionSnapshot(recipeId) {
+      return state.reactions.get(recipeId) || { likes: 0, dislikes: 0 };
+    }
+
+    function summaryCounts(recipe) {
+      const r = reactionSnapshot(recipe.id);
+      return {
+        likes: recipe.likes + r.likes,
+        dislikes: recipe.dislikes + r.dislikes,
+        saves: recipe.saves + (state.savedRecipes.has(recipe.id) ? 1 : 0)
+      };
+    }
+
+    function renderMiniList(target, list) {
+      target.innerHTML = list.map(recipe => {
+        const counts = summaryCounts(recipe);
+        return `
+          <button class="mini-recipe w-full text-left rounded-2xl border border-gray-800 bg-gray-950 p-4 hover:border-purple-500/40 hover:bg-gray-900 transition" data-recipe-id="${recipe.id}">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h3 class="font-semibold">${recipe.title}</h3>
+                <p class="text-xs text-gray-400 mt-1">${recipe.author} · ${recipe.time} min · ${recipe.rating.toFixed(1)}★</p>
+              </div>
+              <span class="text-[11px] rounded-full border border-gray-700 px-2 py-1 text-gray-300">${Math.round(recScore(recipe) * 100)}</span>
+            </div>
+            <div class="mt-3 flex gap-3 text-xs text-gray-400">
+              <span>▲ ${counts.likes}</span>
+              <span>▼ ${counts.dislikes}</span>
+              <span>★ ${counts.saves}</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderPanel(recipe) {
+      state.selectedRecipeId = recipe.id;
+      const counts = summaryCounts(recipe);
+      const pantryFit = Math.round(recipeMatchesPantry(recipe) * 100);
+      const selectedTag = state.loggedIn ? 'Member view' : 'Guest view';
+      els.selectedBadge.textContent = selectedTag;
+
+      const dynamic = state.dynamicComments.get(recipe.id) || [];
+      const thread = [...recipe.commentsThread, ...dynamic];
+
+      els.detailPanel.innerHTML = `
+        <div class="rounded-2xl border border-gray-800 overflow-hidden">
+          <div class="h-40 bg-gradient-to-br ${recipe.color} relative">
+            <div class="absolute inset-0 bg-black/20"></div>
+            <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
+              <div>
+                <h3 class="text-2xl font-bold">${recipe.title}</h3>
+                <p class="text-sm text-white/80">by ${recipe.author} · ${recipe.cuisine}</p>
+              </div>
+              <span class="rounded-full bg-black/25 backdrop-blur px-3 py-1 text-xs border border-white/20">${recipe.time} min</span>
+            </div>
+          </div>
+          <div class="p-4 space-y-4 bg-gray-950">
+            <p class="text-gray-300 text-sm">${recipe.summary}</p>
+            <div class="flex flex-wrap gap-2 text-xs">
+              ${recipe.tags.map(tag => `<span class="rounded-full border border-gray-700 px-2 py-1 text-gray-300">${tag}</span>`).join('')}
+            </div>
+            <div class="grid grid-cols-3 gap-3">
+              <button class="reaction-btn rounded-2xl border border-gray-800 bg-gray-900 py-3 text-sm hover:border-emerald-500/40 transition disabled:cursor-not-allowed disabled:opacity-50" data-action="like" data-id="${recipe.id}" ${state.loggedIn ? '' : 'disabled'}>👍 <span>${counts.likes}</span></button>
+              <button class="reaction-btn rounded-2xl border border-gray-800 bg-gray-900 py-3 text-sm hover:border-rose-500/40 transition disabled:cursor-not-allowed disabled:opacity-50" data-action="dislike" data-id="${recipe.id}" ${state.loggedIn ? '' : 'disabled'}>👎 <span>${counts.dislikes}</span></button>
+              <button class="reaction-btn rounded-2xl border border-gray-800 bg-gray-900 py-3 text-sm hover:border-purple-500/40 transition disabled:cursor-not-allowed disabled:opacity-50" data-action="save" data-id="${recipe.id}" ${state.loggedIn ? '' : 'disabled'}>${state.savedRecipes.has(recipe.id) ? '★ Saved' : '☆ Save'}</button>
+            </div>
+            <div class="grid sm:grid-cols-2 gap-3 text-sm">
+              <div class="rounded-2xl border border-gray-800 bg-gray-900 p-4">
+                <p class="text-gray-500 text-xs uppercase tracking-wider">Pantry fit</p>
+                <p class="text-2xl font-bold mt-1">${pantryFit}%</p>
+                <p class="text-gray-400 text-xs mt-1">${recipe.ingredients.filter(i => pantryItems.includes(normalize(i))).join(', ') || 'No pantry overlap yet'}</p>
+              </div>
+              <div class="rounded-2xl border border-gray-800 bg-gray-900 p-4">
+                <p class="text-gray-500 text-xs uppercase tracking-wider">Popularity</p>
+                <p class="text-2xl font-bold mt-1">${counts.likes - counts.dislikes}</p>
+                <p class="text-gray-400 text-xs mt-1">Net score from community activity</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-gray-800 bg-gray-950 p-4">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-semibold">Threaded comments</h4>
+            <span class="text-xs text-gray-500">${thread.length} top-level comments</span>
+          </div>
+          <form class="mb-4 space-y-3 comment-form" data-id="${recipe.id}">
+            <label class="block text-xs uppercase tracking-wider text-gray-500">Add a comment</label>
+            <textarea rows="3" ${state.loggedIn ? '' : 'disabled'} placeholder="Write a comment..." class="w-full rounded-2xl border border-gray-800 bg-gray-900 px-4 py-3 text-sm outline-none focus:border-purple-500 disabled:cursor-not-allowed disabled:opacity-50"></textarea>
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-xs text-gray-500">${state.loggedIn ? 'Post a reply to the community thread.' : 'Log in to post comments.'}</p>
+              <button type="submit" ${state.loggedIn ? '' : 'disabled'} class="rounded-full bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 transition disabled:cursor-not-allowed disabled:opacity-50">Post</button>
+            </div>
+          </form>
+          <div class="space-y-4">
+            ${thread.map(comment => `
+              <div class="rounded-2xl border border-gray-800 bg-gray-900 p-4">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-semibold text-purple-300">${comment.user}</p>
+                    <p class="text-sm text-gray-300 mt-1">${comment.text}</p>
+                  </div>
+                  <button class="text-xs text-gray-400 hover:text-white transition">Reply</button>
+                </div>
+                ${comment.replies && comment.replies.length ? `
+                  <div class="mt-3 ml-4 pl-4 border-l border-gray-700 space-y-3">
+                    ${comment.replies.map(reply => `
+                      <div>
+                        <p class="text-xs font-semibold text-gray-400">${reply.user}</p>
+                        <p class="text-sm text-gray-300">${reply.text}</p>
+                      </div>
+                    `).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      const alternatives = [...recipes]
+        .filter(r => r.id !== recipe.id)
+        .sort((a, b) => Math.abs(recScore(b) - recScore(recipe)) - Math.abs(recScore(a) - recScore(recipe)))
+        .slice(0, 4);
+
+      const pantryMatches = [...recipes]
+        .filter(r => r.id !== recipe.id)
+        .sort((a, b) => recipeMatchesPantry(b) - recipeMatchesPantry(a))
+        .slice(0, 4);
+
+      renderMiniList(els.moreLikeThis, alternatives);
+      renderMiniList(els.inYourPantry, pantryMatches);
+    }
+
+    function render() {
+      const visible = visibleRecipes();
+      els.guestBanner.classList.toggle('hidden', state.loggedIn);
+      els.resultCount.textContent = `${visible.length} recipes found`;
+
+      const trending = [...recipes].sort((a, b) => b.activity - a.activity).slice(0, 4);
+      const top = [...recipes].sort((a, b) => (b.likes - b.dislikes) - (a.likes - a.dislikes)).slice(0, 4);
+
+      els.trendingGrid.innerHTML = trending.map(recipeCard).join('');
+      els.topGrid.innerHTML = top.map(recipeCard).join('');
+      els.resultsGrid.innerHTML = visible.length ? visible.map(recipeCard).join('') : `
+        <div class="col-span-full rounded-3xl border border-dashed border-gray-700 bg-gray-950 p-8 text-center text-gray-400">
+          No recipes match your filters. Try clearing a filter or searching something else.
+        </div>
+      `;
+      els.pantryPreview.innerHTML = pantryItems.map(item => `<span class="rounded-full border border-gray-700 bg-gray-900 px-3 py-1 text-xs text-gray-300">${item}</span>`).join('');
+
+      const selected = recipes.find(r => r.id === state.selectedRecipeId) || visible[0] || recipes[0];
+      if (selected) renderPanel(selected);
+
+      document.querySelectorAll('[data-recipe-id]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          const recipeId = Number(el.dataset.recipeId);
+          const recipe = recipes.find(r => r.id === recipeId);
+          if (!recipe) return;
+          if (e.target.closest('.reaction-btn')) return;
+          renderPanel(recipe);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+
+      document.querySelectorAll('.reaction-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (!state.loggedIn) return;
+          const id = Number(btn.dataset.id);
+          const action = btn.dataset.action;
+          const current = state.reactions.get(id) || { likes: 0, dislikes: 0 };
+          const next = { ...current };
+          if (action === 'like') next.likes += 1;
+          if (action === 'dislike') next.dislikes += 1;
+          if (action === 'save') {
+            if (state.savedRecipes.has(id)) state.savedRecipes.delete(id);
+            else state.savedRecipes.add(id);
+          }
+          state.reactions.set(id, next);
+          render();
+        });
+      });
+
+      document.querySelectorAll('.comment-form').forEach(form => {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          if (!state.loggedIn) return;
+          const recipeId = Number(form.dataset.id);
+          const textarea = form.querySelector('textarea');
+          const text = textarea.value.trim();
+          if (!text) return;
+          const list = state.dynamicComments.get(recipeId) || [];
+          list.unshift({ user: 'You', text, replies: [] });
+          state.dynamicComments.set(recipeId, list);
+          textarea.value = '';
+          render();
+        });
+      });
+
+      document.querySelectorAll('.mini-recipe').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const recipe = recipes.find(r => r.id === Number(btn.dataset.recipeId));
+          if (recipe) renderPanel(recipe);
+        });
+      });
+    }
+
+    els.searchInput.addEventListener('input', () => {
+      state.search = els.searchInput.value;
+      render();
+    });
+
+    els.pantryMatchToggle.addEventListener('change', () => {
+      state.pantryOnly = els.pantryMatchToggle.checked;
+      render();
+    });
+
+    els.allergyToggle.addEventListener('change', () => {
+      state.allergySafe = els.allergyToggle.checked;
+      render();
+    });
+
+    document.querySelectorAll('.filter-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const filter = btn.dataset.filter;
+        if (state.activeTags.has(filter)) {
+          state.activeTags.delete(filter);
+          btn.classList.remove('border-purple-500', 'text-purple-300', 'bg-purple-500/10');
+        } else {
+          state.activeTags.add(filter);
+          btn.classList.add('border-purple-500', 'text-purple-300', 'bg-purple-500/10');
         }
-    </script>
+        render();
+      });
+    });
+
+    els.clearFiltersBtn.addEventListener('click', () => {
+      state.search = '';
+      state.activeTags.clear();
+      state.pantryOnly = true;
+      state.allergySafe = true;
+      els.searchInput.value = '';
+      els.pantryMatchToggle.checked = true;
+      els.allergyToggle.checked = true;
+      document.querySelectorAll('.filter-chip').forEach(btn => btn.classList.remove('border-purple-500', 'text-purple-300', 'bg-purple-500/10'));
+      render();
+    });
+
+    els.loginBtn.addEventListener('click', () => {
+      els.loginModal.dataset.hidden = 'false';
+      els.loginModal.classList.remove('hidden');
+    });
+
+    els.closeLoginBtn.addEventListener('click', () => {
+      els.loginModal.dataset.hidden = 'true';
+      els.loginModal.classList.add('hidden');
+    });
+
+    els.loginModal.addEventListener('click', (e) => {
+      if (e.target === els.loginModal) {
+        els.loginModal.dataset.hidden = 'true';
+        els.loginModal.classList.add('hidden');
+      }
+    });
+
+    els.loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      state.loggedIn = true;
+      document.body.classList.add('member-view');
+      els.sessionLabel.textContent = `Logged in as ${document.getElementById('loginEmail').value.split('@')[0]}`;
+      els.loginModal.dataset.hidden = 'true';
+      els.loginModal.classList.add('hidden');
+      els.loginBtn.textContent = 'Log Out';
+      els.loginBtn.onclick = () => {
+        state.loggedIn = false;
+        els.sessionLabel.textContent = 'Guest view';
+        els.loginBtn.textContent = 'Log In';
+        els.loginBtn.onclick = null;
+        location.reload();
+      };
+      render();
+    });
+
+    document.addEventListener('click', (e) => {
+      const mini = e.target.closest('.mini-recipe');
+      if (mini) {
+        const recipe = recipes.find(r => r.id === Number(mini.dataset.recipeId));
+        if (recipe) renderPanel(recipe);
+      }
+    });
+
+    render();
+  </script>
 </body>
 </html>
