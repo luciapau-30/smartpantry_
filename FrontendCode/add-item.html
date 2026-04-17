@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Pantry - My Pantry</title>
+    <title>Smart Pantry - Add Item</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen">
@@ -20,7 +20,7 @@
                         <a href="index.html" class="text-gray-400 hover:text-purple-400 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-500 text-sm font-medium transition">
                             Explore Recipes
                         </a>
-                        <a href="pantry.html" class="text-white inline-flex items-center px-1 pt-1 border-b-2 border-purple-500 text-sm font-medium">
+                        <a href="pantry.html" class="text-gray-400 hover:text-purple-400 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-500 text-sm font-medium transition">
                             My Pantry
                         </a>
                         <a href="recipes.html" class="text-gray-400 hover:text-purple-400 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-500 text-sm font-medium transition">
@@ -38,18 +38,44 @@
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-        <div class="text-center pt-0">
-            <h1 class="text-4xl font-bold text-white tracking-tight">My Pantry</h1>
-            <p class="mt-4 text-gray-400">Pantry management tools coming soon!</p>
+    <main class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <!-- Add Item modal shown on page load. Closing navigates back. -->
+        <div id="addItemModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-gray-800 border border-gray-700 w-full max-w-md rounded-xl shadow-2xl p-8 relative">
+                <button onclick="closeAddItemModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
 
-            <div class="mt-6 flex justify-center">
-                <a href="add-item.html" class="inline-flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow">Add Item</a>
+                <h2 class="text-3xl font-bold text-white mb-6 text-center">Add Item</h2>
+
+                <form action="#" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Item Name</label>
+                        <input type="text" name="itemName" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Quantity</label>
+                        <input type="number" name="quantity" min="1" value="1" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Expiration Date</label>
+                        <input type="date" name="expiration" class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition shadow">Add Item</button>
+                        <button type="button" onclick="closeAddItemModal()" class="text-gray-400 hover:text-white">Cancel</button>
+                    </div>
+                </form>
             </div>
         </div>
     </main>
 
-    <!--Ui for the popup login-->
+    <!--Ui for the popup login (copied from other pages) -->
     <div id="loginModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-gray-800 border border-gray-700 w-full max-w-md rounded-xl shadow-2xl p-8 relative">
             
@@ -86,18 +112,35 @@
         </div>
     </div>
 
-    <!--Basically just a script to close the popup-->
     <script>
         function toggleModal() {
             const modal = document.getElementById('loginModal');
             modal.classList.toggle('hidden');
         }
 
-        // Close popup if user clicks outside the box
+        function closeAddItemModal() {
+            const modal = document.getElementById('addItemModal');
+            if (modal) {
+                // hide first for a cleaner transition then go back
+                modal.classList.add('hidden');
+            }
+            // navigate back to previous page (pantry)
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = 'pantry.html';
+            }
+        }
+
+        // Close popup if user clicks outside the box for both modals
         window.onclick = function(event) {
-            const modal = document.getElementById('loginModal');
-            if (event.target == modal) {
+            const loginModal = document.getElementById('loginModal');
+            if (loginModal && event.target == loginModal) {
                 toggleModal();
+            }
+            const addModal = document.getElementById('addItemModal');
+            if (addModal && event.target == addModal) {
+                closeAddItemModal();
             }
         }
     </script>
