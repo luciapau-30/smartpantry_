@@ -1,9 +1,14 @@
 package edu.usc.csci201.group12.smartpantry.recommendation;
 
+import edu.usc.csci201.group12.smartpantry.jdbc.JdbcConnectionFactory;
 import edu.usc.csci201.group12.smartpantry.model.User;
 import edu.usc.csci201.group12.smartpantry.model.content.Recipe;
 import edu.usc.csci201.group12.smartpantry.recipe.RecipeRepository;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -69,11 +74,18 @@ public final class RecipeRecommender {
         return new ScoredRecipe(recipe, total, pantryS, prefS, popularS, missing);
     }
 
-    /**
-     * Returns the comment count for a recipe.
-     * TODO: replace with a real DAO call once a CommentRepository is available.
-     */
+    private static final String COUNT_COMMENTS_SQL =
+            "SELECT COUNT(*) FROM COMMENTS WHERE recipe_id = ? AND is_deleted = FALSE";
+
     private int getCommentCount(String recipeId) {
-        return 0;
+        try (Connection conn = JdbcConnectionFactory.openConnection();
+             PreparedStatement ps = conn.prepareStatement(COUNT_COMMENTS_SQL)) {
+            ps.setString(1, recipeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            return 0;
+        }
     }
 }
