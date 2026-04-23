@@ -1,6 +1,6 @@
 # Lucia's Implementation Plan — Algo & Data Processing
 
-## My Responsibilities
+## TO DO
 - Synonym Matching
 - Quantity Normalization
 - Recommendation Engine (scoring)
@@ -10,7 +10,7 @@
 
 ## Current Status Summary
 
-| Component | File | Status |
+| Component |                   File | Status |
 |---|---|---|
 | Synonym Matching | `IngredientSynonymResolver.java` | ✅ Done |
 | Quantity Normalization | `UnitNormalizer.java` | ✅ Done |
