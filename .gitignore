@@ -1,5 +1,9 @@
-# Maven
+# macOS
+.DS_Store
+
+# Maven build output
 backend/target/
+target/
 
 # Compiled class file
 *.class

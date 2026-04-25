@@ -1,3 +1,5 @@
+// MERGE (lucia/recommendation-engine → dev): Javadoc conflict only — kept Archit's more
+// descriptive comment referencing Member domain methods. Code is identical on both branches.
 package edu.usc.csci201.group12.smartpantry.jdbc;
 
 import javax.naming.InitialContext;
