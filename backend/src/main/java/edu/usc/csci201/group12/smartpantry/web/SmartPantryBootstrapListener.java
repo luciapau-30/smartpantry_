@@ -1,11 +1,15 @@
 // MERGE (lucia/recommendation-engine → dev): Added recommendation engine wiring.
 // PORTED (zeqiang/database): Added JDBC store wiring — uses JdbcUserStore + JdbcRecipeRepository
 // when PANTRY_DB_URL env var is set, falls back to in-memory implementations otherwise.
+// T2/T3/T4: Adds BackgroundJobs thread pool, ExpiryCheckJob scheduled at fixed rate, and
+// PantryEventBroadcaster for the WebSocket fan-out. Pool is shut down in contextDestroyed.
 package edu.usc.csci201.group12.smartpantry.web;
 
-import edu.usc.csci201.group12.smartpantry.dao.IngredientDao;
+import edu.usc.csci201.group12.smartpantry.background.BackgroundJobs;
+import edu.usc.csci201.group12.smartpantry.background.ExpiryCheckJob;
 import edu.usc.csci201.group12.smartpantry.dao.InMemoryUserStore;
 import edu.usc.csci201.group12.smartpantry.dao.JdbcUserStore;
+import edu.usc.csci201.group12.smartpantry.dao.PantryItemDao;
 import edu.usc.csci201.group12.smartpantry.dao.RecipeIngredientDao;
 import edu.usc.csci201.group12.smartpantry.dao.RecipeStepDao;
 import edu.usc.csci201.group12.smartpantry.dao.UserDao;
@@ -21,10 +25,13 @@ import edu.usc.csci201.group12.smartpantry.recommendation.RecipeScorer;
 import edu.usc.csci201.group12.smartpantry.recommendation.ScoreWeights;
 import edu.usc.csci201.group12.smartpantry.recommendation.UnitNormalizer;
 import edu.usc.csci201.group12.smartpantry.security.PasswordHasher;
+import edu.usc.csci201.group12.smartpantry.websocket.PantryEventBroadcaster;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Wires stores at startup. Uses JDBC implementations when PANTRY_DB_URL is set,
@@ -32,6 +39,10 @@ import jakarta.servlet.annotation.WebListener;
  */
 @WebListener
 public final class SmartPantryBootstrapListener implements ServletContextListener {
+
+    private static final int  BACKGROUND_POOL_SIZE   = 4;
+    private static final long EXPIRY_CHECK_PERIOD_MIN = 5;
+    private static final int  EXPIRY_WINDOW_DAYS     = 3;
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
@@ -67,6 +78,36 @@ public final class SmartPantryBootstrapListener implements ServletContextListene
             RecipeScorer scorer = new RecipeScorer(pantryMatcher);
             RecipeRecommender recommender = new RecipeRecommender(recipeRepo, scorer, ScoreWeights.defaults());
             ctx.setAttribute(ContextKeys.RECOMMENDER, recommender);
+        }
+
+        // T4: broadcaster published to context so servlets can fire pantry-update events.
+        PantryEventBroadcaster broadcaster;
+        if (ctx.getAttribute(ContextKeys.EVENT_BROADCASTER) == null) {
+            broadcaster = new PantryEventBroadcaster();
+            ctx.setAttribute(ContextKeys.EVENT_BROADCASTER, broadcaster);
+        } else {
+            broadcaster = (PantryEventBroadcaster) ctx.getAttribute(ContextKeys.EVENT_BROADCASTER);
+        }
+
+        // T2 + T3: thread pool + scheduled expiry job.
+        if (ctx.getAttribute(ContextKeys.BACKGROUND_JOBS) == null) {
+            BackgroundJobs jobs = new BackgroundJobs(BACKGROUND_POOL_SIZE);
+            ExpiryCheckJob expiryJob = new ExpiryCheckJob(
+                    new PantryItemDao(),
+                    broadcaster,
+                    EXPIRY_WINDOW_DAYS,
+                    useJdbc
+            );
+            jobs.scheduleAtFixedRate(expiryJob, 30, EXPIRY_CHECK_PERIOD_MIN * 60, TimeUnit.SECONDS);
+            ctx.setAttribute(ContextKeys.BACKGROUND_JOBS, jobs);
+        }
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        Object jobs = sce.getServletContext().getAttribute(ContextKeys.BACKGROUND_JOBS);
+        if (jobs instanceof BackgroundJobs bg) {
+            bg.shutdown();
         }
     }
 }

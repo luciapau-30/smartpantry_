@@ -9,6 +9,7 @@ import edu.usc.csci201.group12.smartpantry.model.Member;
 import edu.usc.csci201.group12.smartpantry.security.RequestUsers;
 import edu.usc.csci201.group12.smartpantry.servlet.AbstractJsonServlet;
 import edu.usc.csci201.group12.smartpantry.web.ContextKeys;
+import edu.usc.csci201.group12.smartpantry.websocket.PantryEventBroadcaster;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -59,6 +60,11 @@ public final class DeletePantryItemServlet extends AbstractJsonServlet {
 
         boolean deleted = pantryItemDao.deleteItem(itemId);
         if (deleted) {
+            PantryEventBroadcaster broadcaster = (PantryEventBroadcaster)
+                    req.getServletContext().getAttribute(ContextKeys.EVENT_BROADCASTER);
+            if (broadcaster != null) {
+                broadcaster.pantryUpdated(member.getId(), "removed", itemId);
+            }
             writeOk(resp);
         } else {
             writeJson(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, JsonApiResponse.fail("Delete failed"));

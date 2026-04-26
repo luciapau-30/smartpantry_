@@ -23,6 +23,22 @@
             <version>6.0.0</version>
             <scope>provided</scope>
         </dependency>
+        <!-- T4: Jakarta WebSocket — provided by Tomcat 10+ at runtime.
+             In 2.1 the API was split: client-api has the core types (Session, OnOpen,
+             OnClose, EndpointConfig, CloseReason, ...) and websocket-api adds the
+             @ServerEndpoint server-side annotations and ServerEndpointConfig. We need both. -->
+        <dependency>
+            <groupId>jakarta.websocket</groupId>
+            <artifactId>jakarta.websocket-client-api</artifactId>
+            <version>2.1.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.websocket</groupId>
+            <artifactId>jakarta.websocket-api</artifactId>
+            <version>2.1.1</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
