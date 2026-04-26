@@ -179,6 +179,16 @@
 - [x] `POST /api/member/recipes/upload` (recipe + ingredients + steps)
 - [x] `POST /api/member/comments`
 - [x] `GET /api/member/recipes/recommend` — ranked recommendation list
+- [x] `GET /api/member/pantry` — read back logged-in member's pantry
+- [x] `DELETE /api/member/pantry/{id}` — remove pantry item (ownership verified)
+- [x] `GET /api/member/recipes/mine` — list member's own uploaded recipes
+- [x] `GET /api/member/recipes/saved` — list member's saved recipes
+- [x] `POST /api/member/recipes/{id}/like` — like/dislike/remove reaction
+- [x] `POST /api/member/recipes/{id}/save` — save/unsave recipe
+- [x] `GET /api/recipes/{id}` — full recipe detail (ingredients, steps, like counts, caller reaction)
+- [x] `GET /api/recipes/{id}/comments` — threaded comments for a recipe
+- [x] `GET /api/recipes/trending` — top 20 by likes in last 24 hours
+- [x] `GET /api/recipes/top` — top 20 by all-time likes
 - [x] CORS filter
 - [x] `JdbcConnectionFactory` — reads `PANTRY_DB_URL` env var
 
@@ -218,25 +228,26 @@
 | **Merge backend branches into `dev`** | ✅ Done | All 3 branches merged; `dev` pushed to remote |
 | **Replace `InMemoryUserStore` with JDBC** | ✅ Done | `JdbcUserStore` wired via `SmartPantryBootstrapListener` |
 | **Replace `InMemoryRecipeRepository` with JDBC** | ✅ Done | `JdbcRecipeRepository` wired; builds full domain objects for recommender |
+| **Add missing REST endpoints** | ✅ Done | pantry GET/DELETE, recipes mine/saved/detail/comments, like/save, trending, top |
 | **Wire frontend fetch() calls to backend** | ❌ Not done | `index.html`, `pantry.html`, `recipes.html` still use hardcoded data — no `fetch()` calls |
 | **Thread pool for Tomcat** | ❌ Not done | Tomcat handles HTTP threads; internal background jobs need an explicit `ScheduledExecutorService` |
 
 ### Backend — Missing Endpoints
-| Endpoint | Purpose |
-|----------|---------|
-| `GET /api/member/pantry` | Retrieve logged-in user's pantry items |
-| `DELETE /api/member/pantry/{id}` | Remove pantry item |
-| `GET /api/recipes/{id}` | Full recipe detail (ingredients, steps, like counts) |
-| `POST /api/member/recipes/{id}/like` | Like or dislike a recipe |
-| `POST /api/member/recipes/{id}/save` | Save/unsave a recipe |
-| `GET /api/recipes/{id}/comments` | Get threaded comments for a recipe |
-| `GET /api/member/recipes/saved` | List user's saved recipes |
-| `GET /api/member/recipes/mine` | List user's uploaded recipes |
-| `GET /api/recipes/trending` | Trending recipes (activity window) |
-| `GET /api/recipes/top` | Top recipes (like ratio) |
-| `PUT /api/member/preferences` | Set dietary preferences + allergies |
-| `POST /api/member/recipes/{id}/make` | "Make recipe" — deduct ingredients from pantry |
-| `GET /api/member/shopping-list` | Generate shopping list from meal plan |
+| Endpoint | Status | Purpose |
+|----------|--------|---------|
+| `GET /api/member/pantry` | ✅ Done | Retrieve logged-in user's pantry items |
+| `DELETE /api/member/pantry/{id}` | ✅ Done | Remove pantry item |
+| `GET /api/recipes/{id}` | ✅ Done | Full recipe detail (ingredients, steps, like counts) |
+| `POST /api/member/recipes/{id}/like` | ✅ Done | Like or dislike a recipe |
+| `POST /api/member/recipes/{id}/save` | ✅ Done | Save/unsave a recipe |
+| `GET /api/recipes/{id}/comments` | ✅ Done | Get threaded comments for a recipe |
+| `GET /api/member/recipes/saved` | ✅ Done | List user's saved recipes |
+| `GET /api/member/recipes/mine` | ✅ Done | List user's uploaded recipes |
+| `GET /api/recipes/trending` | ✅ Done | Trending recipes (last 24 hours) |
+| `GET /api/recipes/top` | ✅ Done | Top recipes (all-time likes) |
+| `PUT /api/member/preferences` | ❌ Not done | Set dietary preferences + allergies |
+| `POST /api/member/recipes/{id}/make` | ❌ Not done | "Make recipe" — deduct ingredients from pantry |
+| `GET /api/member/shopping-list` | ❌ Not done | Generate shopping list from meal plan |
 
 ### CSCI 201 Requirements — Not Yet Implemented
 | Requirement | What's Needed |
@@ -276,7 +287,7 @@
 1. ✅ **Merge** `archit-chenyang/integration` → `dev` (backend foundation)
 2. ✅ **Port** Zeqiang's `zeqiang/database` DAOs into the Maven project; wire `JdbcUserStore` and `JdbcRecipeRepository` behind existing interfaces
 3. ✅ **Merge** `lucia/recommendation-engine` → `dev` (recommendation engine)
-4. ❌ **Add** missing REST endpoints (pantry GET, likes, saves, comments GET, trending, top)
+4. ✅ **Add** missing REST endpoints (pantry GET/DELETE, likes, saves, comments GET, trending, top, recipe detail)
 5. ❌ **Add** background expiry thread + WebSocket endpoint
 6. ❌ **Wire** each frontend page to the real API (replace hardcoded data with `fetch()` calls)
 7. ❌ **Implement** login/register modal flow end-to-end

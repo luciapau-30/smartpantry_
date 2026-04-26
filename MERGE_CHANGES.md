@@ -124,3 +124,39 @@ Frontend developers can still run the app without MySQL — nothing breaks.
 
 #### Build verified
 `mvn clean package -DskipTests` → **BUILD SUCCESS** after this port.
+
+---
+
+## Step 4 — Missing REST endpoints added to `dev`
+**Date:** 2026-04-25
+**Commit:** `3434754`
+**Who:** Lucia
+
+### What was added
+All endpoints were missing from the backend — DAOs existed but no servlet exposed them over HTTP.
+
+| New file | Endpoint | What it does |
+|----------|----------|-------------|
+| `servlet/member/GetPantryServlet.java` | `GET /api/member/pantry` | Returns the logged-in member's full pantry item list |
+| `servlet/member/DeletePantryItemServlet.java` | `DELETE /api/member/pantry/{id}` | Deletes a pantry item; verifies ownership before deleting |
+| `servlet/member/GetMyRecipesServlet.java` | `GET /api/member/recipes/mine` | Lists all recipes uploaded by the logged-in member |
+| `servlet/member/GetSavedRecipesServlet.java` | `GET /api/member/recipes/saved` | Lists all recipes the member has saved |
+| `servlet/member/RecipeInteractionServlet.java` | `POST /api/member/recipes/{id}/like` | Like or dislike a recipe; body `{"isLike": true/false}`, omit to remove reaction |
+| `servlet/member/RecipeInteractionServlet.java` | `POST /api/member/recipes/{id}/save` | Save or unsave a recipe; body `{"save": true/false}` |
+| `servlet/RecipeDetailServlet.java` | `GET /api/recipes/{id}` | Full recipe detail: ingredients, steps, like/dislike/save counts, caller's own reaction |
+| `servlet/RecipeDetailServlet.java` | `GET /api/recipes/{id}/comments` | Top-level threaded comments for a recipe |
+| `servlet/TrendingRecipesServlet.java` | `GET /api/recipes/trending` | Top 20 recipes by likes in the last 24 hours |
+| `servlet/TopRecipesServlet.java` | `GET /api/recipes/top` | Top 20 recipes by all-time like count |
+
+### How trending/top works (two-step approach)
+Instead of a complex SQL JOIN, these use two simple steps in Java:
+1. Query `RECIPE_LIKES` for the top recipe IDs ordered by like count
+2. Loop and call `RecipeDao.getById(id)` for each ID
+
+Two new methods added to `RecipeLikeDao`: `getTrendingRecipeIds(limit)` and `getTopLikedRecipeIds(limit)`.
+
+### URL routing note
+`RecipeInteractionServlet` is mapped to `/api/member/recipes/*` (wildcard). The Servlet spec gives exact-pattern mappings higher priority, so the existing fixed endpoints (`/recommend`, `/upload`, `/mine`, `/saved`) are unaffected. Same applies to `RecipeDetailServlet` at `/api/recipes/*` — `/api/recipes/trending` and `/api/recipes/top` still route to their own servlets.
+
+### Build verified
+`mvn clean package -DskipTests` → **BUILD SUCCESS** (72 source files)
