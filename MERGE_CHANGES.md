@@ -69,15 +69,58 @@ The full recommendation engine pipeline plus a new `/api/member/recipes/recommen
 
 ---
 
-## Up Next — Step 3: Port `zeqiang/database` DAOs into Maven project
+## Step 3 — Port `zeqiang/database` DAOs into Maven project
+**Date:** 2026-04-25
+**Commit:** `715ccb2`
+**Who:** Lucia (merge integrator)
 
-Zeqiang's work lives in a standalone Eclipse project with flat packages (`dao.*`, `model.*`).
-It needs to be manually copied into the Maven project and package declarations updated.
+### What was done
+Zeqiang's standalone Eclipse DAO project was manually ported into the Maven backend. All files were placed under `backend/src/main/java/...` with correct package declarations. `Database.getConnection()` was replaced with `JdbcConnectionFactory.openConnection()` already present in the project.
 
-Files to port:
-- `UserDao`, `RecipeDao`, `PantryItemDao`, `IngredientDao`, `RecipeIngredientDao`
-- `RecipeStepDao`, `RecipeLikeDao`, `RecipeSaveDao`, `CommentDao`, `UserAllergyDao`
-- `Database.java` → replace with `JdbcConnectionFactory` already in the project
+#### Naming collisions resolved
+Zeqiang's POJOs conflicted with Archit's domain models that share the same simple names. The DAO-layer row objects were renamed with a `Row` suffix:
 
-After porting, `InMemoryUserStore` and `InMemoryRecipeRepository` will be replaced with
-JDBC-backed implementations behind the existing `UserStore` and `RecipeRepository` interfaces.
+| Zeqiang's original name | Renamed to | Why |
+|------------------------|-----------|-----|
+| `dao.Recipe` | `dao.RecipeRow` | Archit's `model.content.Recipe` already exists |
+| `dao.PantryItem` | `dao.PantryItemRow` | Archit's `recommendation.PantryItem` already exists |
+| `dao.Comment` | `dao.CommentRow` | Archit's `model.content.Comment` already exists |
+| `dao.RecipeIngredient` | `dao.RecipeIngredientRow` | Archit's `model.content.Recipe.RecipeIngredient` already exists |
+| `dao.User` | eliminated | Replaced by package-private `dao.UserRow` bridge DTO |
+
+#### New files added
+| File | What it does |
+|------|-------------|
+| `dao/UserRow.java` | Package-private DTO bridging `UserDao` → `JdbcUserStore`; not visible outside `dao` package |
+| `dao/RecipeRow.java` | DB row POJO for RECIPES table |
+| `dao/PantryItemRow.java` | DB row POJO for PANTRY_ITEMS table |
+| `dao/CommentRow.java` | DB row POJO for COMMENTS table |
+| `dao/RecipeIngredientRow.java` | DB row POJO for RECIPE_INGREDIENTS table |
+| `dao/RecipeStep.java` | DB row POJO for RECIPE_STEPS table (no collision) |
+| `dao/Ingredient.java` | DB row POJO for INGREDIENTS table (no collision) |
+| `dao/UserAllergy.java` | DB row POJO for USER_ALLERGIES table (no collision) |
+| `dao/UserDao.java` | CRUD for USERS table; returns `UserRow` |
+| `dao/PantryItemDao.java` | CRUD for PANTRY_ITEMS; includes `getExpiringSoon()` for background thread |
+| `dao/IngredientDao.java` | CRUD for INGREDIENTS table |
+| `dao/RecipeIngredientDao.java` | CRUD for RECIPE_INGREDIENTS table |
+| `dao/RecipeStepDao.java` | CRUD for RECIPE_STEPS table |
+| `dao/RecipeLikeDao.java` | Upsert like/dislike for RECIPE_LIKES table |
+| `dao/RecipeSaveDao.java` | Save/unsave recipes for RECIPE_SAVES table |
+| `dao/CommentDao.java` | Threaded comments with soft-delete for COMMENTS table |
+| `dao/UserAllergyDao.java` | CRUD for USER_ALLERGIES table |
+| `dao/JdbcUserStore.java` | Implements `UserStore` interface; maps `UserRow` → `Member` or `Guest` |
+| `recipe/RecipeDao.java` | CRUD for RECIPES table; ported from zeqiang, returns `RecipeRow` |
+| `recipe/JdbcRecipeRepository.java` | Implements `RecipeRepository`; builds full `Recipe` domain objects from DB for the recommendation engine |
+
+#### Bootstrap wiring updated
+`SmartPantryBootstrapListener` now checks for `PANTRY_DB_URL` at startup:
+- **If set:** wires `JdbcRecipeRepository` + `JdbcUserStore` (real database)
+- **If not set:** falls back to `InMemoryRecipeRepository` + `InMemoryUserStore` (demo/dev mode, no DB needed)
+
+Frontend developers can still run the app without MySQL — nothing breaks.
+
+#### MySQL dependency added
+`pom.xml` now includes `mysql-connector-j 8.3.0`.
+
+#### Build verified
+`mvn clean package -DskipTests` → **BUILD SUCCESS** after this port.
