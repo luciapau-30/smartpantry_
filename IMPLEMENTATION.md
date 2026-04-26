@@ -82,7 +82,7 @@
   - `POST /api/member/comments` — post a comment (supports `parentCommentId` for threading)
 - `GET /api/recipes` — `GuestRecipeServlet` — browse or search by ingredient (both guest and logged-in)
 - `RegisterRequest` supports optional `accountType: "guest" | "member"`
-- **Status: NOT merged to `main` — integration needed**
+- **Status: ✅ Merged into `dev` (2026-04-25)**
 
 ---
 
@@ -112,7 +112,7 @@
 - `synonyms.json` resource file on classpath
 - Updated `SmartPantryBootstrapListener` wires the full recommender pipeline at startup
 - Also includes `JdbcConnectionFactory` (same as archit-chenyang version)
-- **Status: NOT merged to `main` — needs integration with archit-chenyang backend**
+- **Status: ✅ Merged into `dev` on top of `archit-chenyang/integration` (2026-04-25)**
 
 ---
 
@@ -136,7 +136,7 @@
   - `UserAllergyDao` — add, list by user, delete
 - All model POJOs: `User`, `Recipe`, `PantryItem`, `Ingredient`, `RecipeIngredient`, `RecipeStep`, `Comment`, `UserAllergy`
 - Full test suite (10 test classes)
-- **Status: NOT integrated into Maven backend — standalone project only**
+- **Status: ✅ Ported into Maven backend on `dev` (2026-04-25) — see MERGE_CHANGES.md for naming collision details**
 
 ---
 
@@ -191,27 +191,35 @@
 - [x] Tunable score weights
 - [x] Full recommendation pipeline servlet
 
-### Database
+### Database & Integration (completed 2026-04-25)
 - [x] Full MySQL schema (all 10 tables)
-- [x] All 10 DAOs with prepared statements
-- [x] All 10 model POJOs
-- [x] Full test suite (10 test classes)
+- [x] All 10 DAOs with prepared statements, ported into Maven under `dao/` and `recipe/`
+- [x] `JdbcUserStore` — implements `UserStore`; maps DB rows → `Member` / `Guest`
+- [x] `JdbcRecipeRepository` — implements `RecipeRepository`; builds full `Recipe` domain objects for the recommendation engine
+- [x] `SmartPantryBootstrapListener` wires JDBC impls when `PANTRY_DB_URL` is set; falls back to in-memory for dev/demo (no DB required)
 - [x] `RecipeLikeDao` — upsert like/dislike with existing-record detection
 - [x] `RecipeSaveDao` — save/unsave with lookup
-- [x] `CommentDao` — threaded comments (parent_comment_id nullable FK)
+- [x] `CommentDao` — threaded comments (`parent_comment_id` nullable FK)
+- [x] `UserAllergyDao` — allergy CRUD per user
+- [x] `PantryItemDao` — includes `getExpiringSoon()` for background thread
+- [x] MySQL connector dependency added to `pom.xml`
+- [x] **`mvn clean package -DskipTests` → BUILD SUCCESS**
+
+### Known Gap
+- `Member.addToPantry()`, `uploadRecipe()`, `postComment()` call `JdbcConnectionFactory.openConnection()` directly — they require `PANTRY_DB_URL` to be set even in dev mode. These endpoints will crash without a DB connection.
 
 ---
 
 ## What Still Needs to Be Done
 
 ### Critical — Integration Work
-| Task | Details |
-|------|---------|
-| **Merge backend branches to `main`** | `archit-chenyang/integration` is the base; merge `lucia/recommendation-engine` on top; then bring in `zeqiang/database` DAO layer to replace in-memory stores |
-| **Replace `InMemoryUserStore` with JDBC** | `UserDao` from Zeqiang already exists — wire it into `SmartPantryBootstrapListener` behind the `UserStore` interface |
-| **Replace `InMemoryRecipeRepository` with JDBC** | `RecipeDao` from Zeqiang already exists — needs a `RecipeRepository` adapter that calls `RecipeDao` methods |
-| **Wire frontend fetch() calls to backend** | `index.html`, `pantry.html`, `recipes.html` make no API calls; all data is hardcoded. Each page needs JS fetch to the servlet endpoints |
-| **Thread pool for Tomcat** | Configure `server.xml` Executor element or use `Executors.newFixedThreadPool` in `SmartPantryBootstrapListener` for internal background tasks |
+| Task | Status | Details |
+|------|--------|---------|
+| **Merge backend branches into `dev`** | ✅ Done | All 3 branches merged; `dev` pushed to remote |
+| **Replace `InMemoryUserStore` with JDBC** | ✅ Done | `JdbcUserStore` wired via `SmartPantryBootstrapListener` |
+| **Replace `InMemoryRecipeRepository` with JDBC** | ✅ Done | `JdbcRecipeRepository` wired; builds full domain objects for recommender |
+| **Wire frontend fetch() calls to backend** | ❌ Not done | `index.html`, `pantry.html`, `recipes.html` still use hardcoded data — no `fetch()` calls |
+| **Thread pool for Tomcat** | ❌ Not done | Tomcat handles HTTP threads; internal background jobs need an explicit `ScheduledExecutorService` |
 
 ### Backend — Missing Endpoints
 | Endpoint | Purpose |
@@ -265,15 +273,15 @@
 
 ## Suggested Integration Order
 
-1. **Merge** `archit-chenyang/integration` → `dev` (backend foundation)
-2. **Port** Zeqiang's `zeqiang/database` DAOs into the Maven project under `backend/src/main/java/.../dao/`; replace `InMemoryUserStore` and `InMemoryRecipeRepository`
-3. **Merge** `lucia/recommendation-engine` → `dev` (recommendation engine)
-4. **Add** missing REST endpoints (pantry GET, likes, saves, comments GET, trending, top)
-5. **Add** background expiry thread + WebSocket endpoint
-6. **Wire** each frontend page to the real API (replace hardcoded data with fetch calls)
-7. **Implement** login/register modal flow end-to-end
-8. **Seed** `INGREDIENTS` table and populate `synonyms.json`
-9. **Test** with ≥ 8 concurrent users; verify < 5s recommendation load time
+1. ✅ **Merge** `archit-chenyang/integration` → `dev` (backend foundation)
+2. ✅ **Port** Zeqiang's `zeqiang/database` DAOs into the Maven project; wire `JdbcUserStore` and `JdbcRecipeRepository` behind existing interfaces
+3. ✅ **Merge** `lucia/recommendation-engine` → `dev` (recommendation engine)
+4. ❌ **Add** missing REST endpoints (pantry GET, likes, saves, comments GET, trending, top)
+5. ❌ **Add** background expiry thread + WebSocket endpoint
+6. ❌ **Wire** each frontend page to the real API (replace hardcoded data with `fetch()` calls)
+7. ❌ **Implement** login/register modal flow end-to-end
+8. ❌ **Seed** `INGREDIENTS` table and populate `synonyms.json`
+9. ❌ **Test** with ≥ 8 concurrent users; verify < 5s recommendation load time
 
 ---
 
