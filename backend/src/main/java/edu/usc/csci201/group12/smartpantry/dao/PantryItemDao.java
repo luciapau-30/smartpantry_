@@ -84,6 +84,28 @@ public class PantryItemDao {
         return list;
     }
 
+    // Used by background expiry thread — all users, not just one.
+    public List<PantryItemRow> getAllExpiringSoon(int withinDays) {
+        List<PantryItemRow> list = new ArrayList<>();
+        String sql = """
+                SELECT * FROM PANTRY_ITEMS
+                WHERE expiration_date IS NOT NULL
+                  AND expiration_date >= CURDATE()
+                  AND expiration_date <= DATE_ADD(CURDATE(), INTERVAL ? DAY)
+                ORDER BY expiration_date ASC
+                """;
+        try (Connection conn = JdbcConnectionFactory.openConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, withinDays);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) list.add(mapRow(rs));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public boolean updateQuantity(String id, double quantity) {
         String sql = "UPDATE PANTRY_ITEMS SET quantity = ? WHERE id = ?";
         try (Connection conn = JdbcConnectionFactory.openConnection();

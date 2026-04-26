@@ -7,6 +7,7 @@ public final class ContextKeys {
     public static final String PASSWORD_HASHER   = "smartpantry.passwordHasher";
     public static final String RECIPE_REPOSITORY = "smartpantry.recipeRepository";
     public static final String RECOMMENDER       = "smartpantry.recommender";
+    public static final String EXPIRY_CHECKER    = "smartpantry.expiryChecker";
 
     private ContextKeys() {
     }

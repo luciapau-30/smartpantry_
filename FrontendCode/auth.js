@@ -26,7 +26,7 @@ function onLoggedIn(user) {
     if (userNav)   userNav.classList.remove('hidden');
     if (userLabel) userLabel.textContent = user.username;
     window.currentUser = user;
-    // Optional hook for page-specific logic (e.g. re-render on index.html)
+    connectAlertSocket();
     if (typeof window.onAuthLogin === 'function') window.onAuthLogin(user);
 }
 
@@ -36,6 +36,7 @@ function onLoggedOut() {
     if (loginBtn) loginBtn.classList.remove('hidden');
     if (userNav)  userNav.classList.add('hidden');
     window.currentUser = null;
+    disconnectAlertSocket();
     if (typeof window.onAuthLogout === 'function') window.onAuthLogout();
 }
 
@@ -183,6 +184,60 @@ window.addEventListener('click', function (e) {
     const modal = document.getElementById('authModal');
     if (modal && e.target === modal) closeModal();
 });
+
+// ── WebSocket alert connection ────────────────────────────────────────────────
+
+function connectAlertSocket() {
+    const wsUrl = API_BASE.replace(/^http/, 'ws') + '/ws/alerts';
+    const ws = new WebSocket(wsUrl);
+
+    ws.onmessage = function (event) {
+        try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'expiry_alert' && data.items && data.items.length > 0) {
+                showExpiryToast(data.items);
+            }
+        } catch (e) { /* ignore malformed messages */ }
+    };
+
+    ws.onclose = function () {
+        // Reconnect after 10 seconds if still logged in
+        if (window.currentUser) setTimeout(connectAlertSocket, 10000);
+    };
+
+    window._alertWs = ws;
+}
+
+function disconnectAlertSocket() {
+    if (window._alertWs) {
+        window._alertWs.onclose = null; // prevent auto-reconnect on logout
+        window._alertWs.close();
+        window._alertWs = null;
+    }
+}
+
+function showExpiryToast(items) {
+    let toast = document.getElementById('_expiryToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = '_expiryToast';
+        toast.style.cssText = [
+            'position:fixed', 'bottom:1.5rem', 'right:1.5rem', 'z-index:9999',
+            'background:#7c3aed', 'color:#fff', 'padding:0.75rem 1.25rem',
+            'border-radius:0.5rem', 'box-shadow:0 4px 12px rgba(0,0,0,0.4)',
+            'font-size:0.875rem', 'max-width:320px', 'display:none'
+        ].join(';');
+        document.body.appendChild(toast);
+    }
+    const count = items.length;
+    const soonest = items.reduce((min, i) => (i.daysLeft < min ? i.daysLeft : min), Infinity);
+    toast.textContent = count === 1
+        ? `1 pantry item expires in ${soonest} day${soonest !== 1 ? 's' : ''}!`
+        : `${count} pantry items expiring soon — soonest in ${soonest} day${soonest !== 1 ? 's' : ''}!`;
+    toast.style.display = 'block';
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => { toast.style.display = 'none'; }, 8000);
+}
 
 // ── On load: check existing session ─────────────────────────────────────────
 

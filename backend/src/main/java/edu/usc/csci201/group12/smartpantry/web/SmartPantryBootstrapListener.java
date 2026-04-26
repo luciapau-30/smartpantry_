@@ -68,5 +68,18 @@ public final class SmartPantryBootstrapListener implements ServletContextListene
             RecipeRecommender recommender = new RecipeRecommender(recipeRepo, scorer, ScoreWeights.defaults());
             ctx.setAttribute(ContextKeys.RECOMMENDER, recommender);
         }
+
+        if (ctx.getAttribute(ContextKeys.EXPIRY_CHECKER) == null) {
+            ExpiryCheckerThread checker = new ExpiryCheckerThread();
+            checker.start();
+            ctx.setAttribute(ContextKeys.EXPIRY_CHECKER, checker);
+        }
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        ExpiryCheckerThread checker = (ExpiryCheckerThread)
+                sce.getServletContext().getAttribute(ContextKeys.EXPIRY_CHECKER);
+        if (checker != null) checker.stop();
     }
 }
