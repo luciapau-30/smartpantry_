@@ -4,6 +4,8 @@ package edu.usc.csci201.group12.smartpantry.dao;
 import edu.usc.csci201.group12.smartpantry.jdbc.JdbcConnectionFactory;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class RecipeLikeDao {
@@ -93,5 +95,31 @@ public class RecipeLikeDao {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    // Step 1 of two-step trending: returns recipe IDs most liked in the last 24 hours.
+    public List<String> getTrendingRecipeIds(int limit) {
+        return getTopIds("WHERE is_like = 1 AND created_at > NOW() - INTERVAL 24 HOUR", limit);
+    }
+
+    // Step 1 of two-step top: returns recipe IDs with the most all-time likes.
+    public List<String> getTopLikedRecipeIds(int limit) {
+        return getTopIds("WHERE is_like = 1", limit);
+    }
+
+    private List<String> getTopIds(String whereClause, int limit) {
+        List<String> ids = new ArrayList<>();
+        String sql = "SELECT recipe_id FROM RECIPE_LIKES " + whereClause
+                + " GROUP BY recipe_id ORDER BY COUNT(*) DESC LIMIT ?";
+        try (Connection conn = JdbcConnectionFactory.openConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, limit);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) ids.add(rs.getString("recipe_id"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return ids;
     }
 }
