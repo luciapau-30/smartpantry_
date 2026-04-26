@@ -191,6 +191,10 @@
 - [x] `GET /api/recipes/top` — top 20 by all-time likes
 - [x] CORS filter
 - [x] `JdbcConnectionFactory` — reads `PANTRY_DB_URL` env var
+- [x] `ExpiryCheckerThread` — daemon thread, checks PANTRY_ITEMS every 60 min, pushes WebSocket alerts
+- [x] `AlertWebSocketEndpoint` — `/ws/alerts`; registers userId→Session on login, sends expiry JSON
+- [x] `HttpSessionConfigurator` — passes HTTP session into WebSocket handshake for user identification
+- [x] `auth.js` — shared auth across all pages; login/register/logout modals wired to backend; WebSocket client with auto-reconnect and toast notifications
 
 ### Recommendation Engine
 - [x] Ingredient synonym resolution with modifier stripping
@@ -230,7 +234,7 @@
 | **Replace `InMemoryRecipeRepository` with JDBC** | ✅ Done | `JdbcRecipeRepository` wired; builds full domain objects for recommender |
 | **Add missing REST endpoints** | ✅ Done | pantry GET/DELETE, recipes mine/saved/detail/comments, like/save, trending, top |
 | **Wire frontend fetch() calls to backend** | ❌ Not done | `index.html`, `pantry.html`, `recipes.html` still use hardcoded data — no `fetch()` calls |
-| **Thread pool for Tomcat** | ❌ Not done | Tomcat handles HTTP threads; internal background jobs need an explicit `ScheduledExecutorService` |
+| **Background thread + WebSocket alerts** | ✅ Done | `ExpiryCheckerThread` + `AlertWebSocketEndpoint` + client toast in `auth.js` |
 
 ### Backend — Missing Endpoints
 | Endpoint | Status | Purpose |
@@ -252,15 +256,15 @@
 ### CSCI 201 Requirements — Not Yet Implemented
 | Requirement | What's Needed |
 |-------------|--------------|
-| **Thread pool (T2)** | Add `Executor` in `SmartPantryBootstrapListener`; Tomcat handles HTTP threads but internal background jobs need explicit pools |
-| **Background thread for expiry checking (T3)** | `ScheduledExecutorService` in bootstrap: query `PANTRY_ITEMS WHERE expiration_date <= NOW() + 3 days`, fire notifications |
-| **WebSockets / live updates (T4)** | Jakarta WebSocket endpoint; events: expiring-item alert, pantry sync, recipe suggestion refresh |
-| **Expiration alerts (F14)** | Depends on background thread above; push message to connected WebSocket session |
+| **Thread pool (T2)** | Tomcat handles HTTP request threads natively; `ExpiryCheckerThread` uses a `ScheduledExecutorService` — explicit pool for CPU-bound background work not yet added |
+| **Background thread for expiry checking (T3)** | ✅ Done — `ExpiryCheckerThread` runs every 60 minutes, queries all expiring items, pushes WebSocket alerts |
+| **WebSockets / live updates (T4)** | ✅ Done — `AlertWebSocketEndpoint` pushes expiry alerts to connected users; client auto-reconnects |
+| **Expiration alerts (F14)** | ✅ Done — toast notification shown in browser via `showExpiryToast()` in `auth.js` |
 
 ### Frontend — Missing Functionality
 | Page/Feature | What's Needed |
 |-------------|--------------|
-| Login / register modal | Form that calls `POST /api/auth/login` and `POST /api/auth/register`; store session cookie |
+| Login / register modal | ✅ Done — `auth.js` shared across all pages; tabbed Sign In / Create Account modal wired to backend |
 | Pantry page | Fetch from `GET /api/member/pantry`, render items with expiry badges, delete button |
 | Add Item form | Wire submit to `POST /api/member/pantry/add` |
 | Community page | Replace hardcoded recipes with `GET /api/recipes`; wire like/dislike/save buttons |
@@ -270,7 +274,7 @@
 | Upload Recipe form | Wire to `POST /api/member/recipes/upload` |
 | Shopping list page | New page; call `GET /api/member/shopping-list` |
 | Guest demo | Allow unauthenticated user one browse + one recipe generation without saving |
-| Real-time alerts | WebSocket listener — show toast on expiring item or pantry update |
+| Real-time alerts | ✅ Done — WebSocket connects on login, toast shown on expiry alert push |
 
 ### Algorithm / Data Quality
 | Item | What's Needed |
@@ -288,9 +292,9 @@
 2. ✅ **Port** Zeqiang's `zeqiang/database` DAOs into the Maven project; wire `JdbcUserStore` and `JdbcRecipeRepository` behind existing interfaces
 3. ✅ **Merge** `lucia/recommendation-engine` → `dev` (recommendation engine)
 4. ✅ **Add** missing REST endpoints (pantry GET/DELETE, likes, saves, comments GET, trending, top, recipe detail)
-5. ❌ **Add** background expiry thread + WebSocket endpoint
+5. ✅ **Add** background expiry thread + WebSocket endpoint
 6. ❌ **Wire** each frontend page to the real API (replace hardcoded data with `fetch()` calls)
-7. ❌ **Implement** login/register modal flow end-to-end
+7. ✅ **Implement** login/register modal flow end-to-end (`auth.js` + tabbed modal on all 4 pages)
 8. ❌ **Seed** `INGREDIENTS` table and populate `synonyms.json`
 9. ❌ **Test** with ≥ 8 concurrent users; verify < 5s recommendation load time
 

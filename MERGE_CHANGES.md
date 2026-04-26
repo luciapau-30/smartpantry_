@@ -160,3 +160,44 @@ Two new methods added to `RecipeLikeDao`: `getTrendingRecipeIds(limit)` and `get
 
 ### Build verified
 `mvn clean package -DskipTests` → **BUILD SUCCESS** (72 source files)
+
+---
+
+## Step 5 — Background expiry thread + WebSocket push alerts
+**Date:** 2026-04-26
+**Commit:** `4388609`
+**Who:** Lucia
+
+### What was added
+
+#### Backend — new files
+| File | What it does |
+|------|-------------|
+| `websocket/HttpSessionConfigurator.java` | `ServerEndpointConfig.Configurator` subclass; copies the HTTP session into the WebSocket handshake properties so the endpoint can identify the user |
+| `websocket/AlertWebSocketEndpoint.java` | `@ServerEndpoint("/ws/alerts")`; maintains a `ConcurrentHashMap<userId, Session>`; exposes `sendToUser()` and `getConnectedUserIds()` for the background thread |
+| `web/ExpiryCheckerThread.java` | Single-daemon-thread `ScheduledExecutorService`; fires `checkAndNotify()` every 60 minutes; queries `PantryItemDao.getAllExpiringSoon(3)`, groups results by userId, pushes JSON alerts to connected users only |
+
+#### Backend — modified files
+| File | Change |
+|------|--------|
+| `dao/PantryItemDao.java` | Added `getAllExpiringSoon(int withinDays)` — queries all users' items expiring within N days (no userId filter; background thread needs all users) |
+| `dao/RecipeLikeDao.java` | Added `getTrendingRecipeIds(limit)` and `getTopLikedRecipeIds(limit)` using a shared private helper |
+| `web/ContextKeys.java` | Added `EXPIRY_CHECKER` constant |
+| `web/SmartPantryBootstrapListener.java` | Added block to create and start `ExpiryCheckerThread` at app startup; added `contextDestroyed()` to stop it cleanly |
+| `pom.xml` | Added `jakarta.websocket-client-api:2.1.0` (provided) — required in addition to `jakarta.websocket-api` because the 2.1 API is split: `websocket-api` is server-only and is missing `Session`, `OnOpen`, `OnClose`, `OnError`, `EndpointConfig`; Tomcat ships both at runtime |
+
+#### Frontend — modified files
+| File | Change |
+|------|--------|
+| `FrontendCode/auth.js` | Added `connectAlertSocket()` — opens `ws://.../ws/alerts`, handles `expiry_alert` messages, auto-reconnects after 10s if still logged in. Added `disconnectAlertSocket()` — called on logout, clears `window._alertWs`. Added `showExpiryToast(items)` — dynamically creates a fixed purple toast showing item count and soonest expiry days. Called from `onLoggedIn`/`onLoggedOut` respectively. |
+
+### Alert JSON format
+```json
+{ "type": "expiry_alert", "items": [{ "id": "...", "ingredientId": "...", "daysLeft": 2, "expirationDate": "2026-04-28" }] }
+```
+
+### WebSocket dependency note
+`jakarta.websocket-api:2.1.0` on Maven Central is server-side only. The shared/client-side classes (`Session`, `OnOpen`, `OnClose`, `OnError`, `EndpointConfig`, `HandshakeResponse`) are published as a separate `jakarta.websocket-client-api:2.1.0` artifact. Both must be on the compile classpath; Tomcat 10.1 provides both at runtime.
+
+### Build verified
+`mvn clean package -DskipTests` → **BUILD SUCCESS**
