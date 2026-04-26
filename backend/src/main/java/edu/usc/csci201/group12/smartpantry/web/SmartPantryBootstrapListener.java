@@ -1,12 +1,18 @@
-// MERGE (lucia/recommendation-engine → dev): Added recommendation engine wiring —
-// imports for IngredientSynonymResolver, PantryMatcher, RecipeScorer, RecipeRecommender,
-// ScoreWeights, UnitNormalizer. recipeRepo reference is now captured so the recommender
-// can be built from it and stored under ContextKeys.RECOMMENDER at startup.
+// MERGE (lucia/recommendation-engine → dev): Added recommendation engine wiring.
+// PORTED (zeqiang/database): Added JDBC store wiring — uses JdbcUserStore + JdbcRecipeRepository
+// when PANTRY_DB_URL env var is set, falls back to in-memory implementations otherwise.
 package edu.usc.csci201.group12.smartpantry.web;
 
+import edu.usc.csci201.group12.smartpantry.dao.IngredientDao;
 import edu.usc.csci201.group12.smartpantry.dao.InMemoryUserStore;
+import edu.usc.csci201.group12.smartpantry.dao.JdbcUserStore;
+import edu.usc.csci201.group12.smartpantry.dao.RecipeIngredientDao;
+import edu.usc.csci201.group12.smartpantry.dao.RecipeStepDao;
+import edu.usc.csci201.group12.smartpantry.dao.UserDao;
 import edu.usc.csci201.group12.smartpantry.dao.UserStore;
 import edu.usc.csci201.group12.smartpantry.recipe.InMemoryRecipeRepository;
+import edu.usc.csci201.group12.smartpantry.recipe.JdbcRecipeRepository;
+import edu.usc.csci201.group12.smartpantry.recipe.RecipeDao;
 import edu.usc.csci201.group12.smartpantry.recipe.RecipeRepository;
 import edu.usc.csci201.group12.smartpantry.recommendation.IngredientSynonymResolver;
 import edu.usc.csci201.group12.smartpantry.recommendation.PantryMatcher;
@@ -21,27 +27,37 @@ import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 
 /**
- * Wires default in-memory implementations. Teammates can replace attributes with JDBC-backed beans here.
+ * Wires stores at startup. Uses JDBC implementations when PANTRY_DB_URL is set,
+ * falls back to in-memory so the app still runs without a database (dev/demo mode).
  */
 @WebListener
 public final class SmartPantryBootstrapListener implements ServletContextListener {
+
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         ServletContext ctx = sce.getServletContext();
+        boolean useJdbc = System.getenv("PANTRY_DB_URL") != null
+                || System.getProperty("pantry.db.url") != null;
 
-        if (ctx.getAttribute(ContextKeys.USER_STORE) == null) {
-            ctx.setAttribute(ContextKeys.USER_STORE, new InMemoryUserStore());
-        }
         if (ctx.getAttribute(ContextKeys.PASSWORD_HASHER) == null) {
             ctx.setAttribute(ContextKeys.PASSWORD_HASHER, new PasswordHasher());
         }
 
         RecipeRepository recipeRepo;
         if (ctx.getAttribute(ContextKeys.RECIPE_REPOSITORY) == null) {
-            recipeRepo = new InMemoryRecipeRepository();
+            recipeRepo = useJdbc
+                    ? new JdbcRecipeRepository(new RecipeDao(), new RecipeIngredientDao(), new RecipeStepDao())
+                    : new InMemoryRecipeRepository();
             ctx.setAttribute(ContextKeys.RECIPE_REPOSITORY, recipeRepo);
         } else {
             recipeRepo = (RecipeRepository) ctx.getAttribute(ContextKeys.RECIPE_REPOSITORY);
+        }
+
+        if (ctx.getAttribute(ContextKeys.USER_STORE) == null) {
+            UserStore userStore = useJdbc
+                    ? new JdbcUserStore(new UserDao(), recipeRepo)
+                    : new InMemoryUserStore();
+            ctx.setAttribute(ContextKeys.USER_STORE, userStore);
         }
 
         if (ctx.getAttribute(ContextKeys.RECOMMENDER) == null) {
