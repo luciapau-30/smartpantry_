@@ -5,18 +5,21 @@
 // To avoid spamming the same alert every tick, we keep an in-memory record of
 // (userId, pantryItemId) pairs we've already alerted on; a row is forgotten once
 // it falls out of the expiry window or is removed from the pantry.
+//
+// The "currently connected" lookup is injected as a Supplier so the job can be
+// unit-tested without booting a WebSocket container.
 package edu.usc.csci201.group12.smartpantry.background;
 
 import edu.usc.csci201.group12.smartpantry.dao.ExpiringPantryItem;
 import edu.usc.csci201.group12.smartpantry.dao.PantryItemDao;
 import edu.usc.csci201.group12.smartpantry.websocket.PantryEventBroadcaster;
-import edu.usc.csci201.group12.smartpantry.websocket.PantryWebSocket;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 public final class ExpiryCheckJob implements Runnable {
@@ -26,6 +29,7 @@ public final class ExpiryCheckJob implements Runnable {
 
     private final PantryItemDao pantryItemDao;
     private final PantryEventBroadcaster broadcaster;
+    private final Supplier<Set<String>> connectedUsersSupplier;
     private final int windowDays;
     private final boolean dbConfigured;
 
@@ -33,18 +37,21 @@ public final class ExpiryCheckJob implements Runnable {
 
     public ExpiryCheckJob(PantryItemDao pantryItemDao,
                           PantryEventBroadcaster broadcaster,
+                          Supplier<Set<String>> connectedUsersSupplier,
                           int windowDays,
                           boolean dbConfigured) {
         this.pantryItemDao = pantryItemDao;
         this.broadcaster = broadcaster;
+        this.connectedUsersSupplier = connectedUsersSupplier;
         this.windowDays = windowDays;
         this.dbConfigured = dbConfigured;
     }
 
     public ExpiryCheckJob(PantryItemDao pantryItemDao,
                           PantryEventBroadcaster broadcaster,
+                          Supplier<Set<String>> connectedUsersSupplier,
                           boolean dbConfigured) {
-        this(pantryItemDao, broadcaster, DEFAULT_WINDOW_DAYS, dbConfigured);
+        this(pantryItemDao, broadcaster, connectedUsersSupplier, DEFAULT_WINDOW_DAYS, dbConfigured);
     }
 
     @Override
@@ -54,8 +61,8 @@ public final class ExpiryCheckJob implements Runnable {
             return;
         }
 
-        Set<String> connected = PantryWebSocket.connectedUserIds();
-        if (connected.isEmpty()) {
+        Set<String> connected = connectedUsersSupplier.get();
+        if (connected == null || connected.isEmpty()) {
             return;
         }
 

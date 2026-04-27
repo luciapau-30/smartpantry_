@@ -55,6 +55,13 @@
             <artifactId>mysql-connector-j</artifactId>
             <version>8.3.0</version>
         </dependency>
+        <!-- T2/T3/T4 unit tests — Surefire 3.x picks up JUnit 5 automatically. -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.3</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

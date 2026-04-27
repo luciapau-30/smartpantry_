@@ -26,6 +26,7 @@ import edu.usc.csci201.group12.smartpantry.recommendation.ScoreWeights;
 import edu.usc.csci201.group12.smartpantry.recommendation.UnitNormalizer;
 import edu.usc.csci201.group12.smartpantry.security.PasswordHasher;
 import edu.usc.csci201.group12.smartpantry.websocket.PantryEventBroadcaster;
+import edu.usc.csci201.group12.smartpantry.websocket.PantryWebSocket;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
@@ -95,6 +96,7 @@ public final class SmartPantryBootstrapListener implements ServletContextListene
             ExpiryCheckJob expiryJob = new ExpiryCheckJob(
                     new PantryItemDao(),
                     broadcaster,
+                    PantryWebSocket::connectedUserIds,
                     EXPIRY_WINDOW_DAYS,
                     useJdbc
             );
