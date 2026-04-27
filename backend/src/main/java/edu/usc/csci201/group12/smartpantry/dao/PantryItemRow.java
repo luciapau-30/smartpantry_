@@ -36,4 +36,9 @@ public class PantryItemRow {
 
     public LocalDateTime getAddedAt() { return addedAt; }
     public void setAddedAt(LocalDateTime addedAt) { this.addedAt = addedAt; }
+
+    // Set by GetPantryServlet via JOIN — not a DB column
+    private String ingredientName;
+    public String getIngredientName() { return ingredientName; }
+    public void setIngredientName(String ingredientName) { this.ingredientName = ingredientName; }
 }

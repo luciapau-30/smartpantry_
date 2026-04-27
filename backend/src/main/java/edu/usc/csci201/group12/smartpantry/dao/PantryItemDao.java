@@ -47,6 +47,32 @@ public class PantryItemDao {
         return null;
     }
 
+    // Returns items enriched with ingredient name via JOIN — used by GetPantryServlet.
+    public List<PantryItemRow> getByUserWithNames(String userId) {
+        List<PantryItemRow> list = new ArrayList<>();
+        String sql = """
+                SELECT pi.*, i.name AS ingredient_name
+                FROM PANTRY_ITEMS pi
+                LEFT JOIN INGREDIENTS i ON pi.ingredient_id = i.id
+                WHERE pi.user_id = ?
+                ORDER BY pi.expiration_date ASC
+                """;
+        try (Connection conn = JdbcConnectionFactory.openConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    PantryItemRow row = mapRow(rs);
+                    row.setIngredientName(rs.getString("ingredient_name"));
+                    list.add(row);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public List<PantryItemRow> getByUser(String userId) {
         List<PantryItemRow> list = new ArrayList<>();
         String sql = "SELECT * FROM PANTRY_ITEMS WHERE user_id = ? ORDER BY expiration_date ASC";

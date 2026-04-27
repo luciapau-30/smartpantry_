@@ -229,136 +229,79 @@
 
   <script src="auth.js"></script>
   <script>
-    const pantryItems = ["tomatoes", "eggs", "rice", "chicken", "spinach", "garlic", "bread", "milk"];
+    const API = 'http://localhost:8080/smartpantry';
+    const COLORS = ['from-pink-500 to-orange-500','from-emerald-500 to-teal-500','from-cyan-500 to-blue-500','from-violet-500 to-fuchsia-500','from-rose-500 to-red-500','from-indigo-500 to-sky-500'];
 
-    const recipes = [
-      {
-        id: 1,
-        title: "Sunset Pasta Primavera",
-        author: "Maya Chen",
-        cuisine: "Italian",
-        tags: ["Vegetarian", "Under 30 min", "Gluten Free"],
-        ingredients: ["tomatoes", "garlic", "spinach", "olive oil", "pasta"],
-        likes: 184,
-        dislikes: 9,
-        saves: 72,
-        comments: 26,
-        activity: 92,
-        rating: 4.8,
-        time: 25,
-        summary: "A bright weeknight pasta loaded with vegetables and a citrus finish.",
-        color: "from-pink-500 to-orange-500",
-        commentsThread: [
-          { user: "Jeffrey", text: "Made this with extra spinach and it was amazing.", replies: [{ user: "Maya Chen", text: "Love that variation!" }] },
-          { user: "Aria", text: "Quick, simple, and very filling.", replies: [] }
-        ]
-      },
-      {
-        id: 2,
-        title: "High-Protein Breakfast Wrap",
-        author: "David K.",
-        cuisine: "American",
-        tags: ["High Protein", "Under 30 min"],
-        ingredients: ["eggs", "spinach", "cheese", "tortilla"],
-        likes: 210,
-        dislikes: 12,
-        saves: 90,
-        comments: 18,
-        activity: 88,
-        rating: 4.9,
-        time: 12,
-        summary: "A fast breakfast wrap that works for busy mornings and meal prep.",
-        color: "from-emerald-500 to-teal-500",
-        commentsThread: [
-          { user: "Lucia", text: "Perfect after the gym.", replies: [{ user: "David K.", text: "Exactly the goal!" }] },
-          { user: "Maya", text: "I swapped cheddar for feta and it was great.", replies: [] }
-        ]
-      },
-      {
-        id: 3,
-        title: "Crispy Garlic Chicken Bowl",
-        author: "Nina Patel",
-        cuisine: "Fusion",
-        tags: ["High Protein", "Peanut Allergy"],
-        ingredients: ["chicken", "rice", "garlic", "broccoli"],
-        likes: 260,
-        dislikes: 8,
-        saves: 111,
-        comments: 41,
-        activity: 97,
-        rating: 4.9,
-        time: 28,
-        summary: "A savory bowl built for pantry ingredients and quick assembly.",
-        color: "from-cyan-500 to-blue-500",
-        commentsThread: [
-          { user: "Alijah", text: "This one fits the pantry-matching idea really well.", replies: [{ user: "Nina Patel", text: "That was the intention!" }] },
-          { user: "Zoe", text: "The garlic sauce is the best part.", replies: [] }
-        ]
-      },
-      {
-        id: 4,
-        title: "Gluten-Free Berry Yogurt Parfait",
-        author: "Sofia Rivera",
-        cuisine: "Breakfast",
-        tags: ["Gluten Free", "Vegetarian"],
-        ingredients: ["yogurt", "berries", "oats", "honey"],
-        likes: 148,
-        dislikes: 4,
-        saves: 64,
-        comments: 13,
-        activity: 77,
-        rating: 4.7,
-        time: 8,
-        summary: "A light no-cook option that looks great and takes minutes to make.",
-        color: "from-violet-500 to-fuchsia-500",
-        commentsThread: [
-          { user: "Keilani", text: "Great for meal prep jars.", replies: [] },
-          { user: "Sam", text: "I added chia seeds and it got even better.", replies: [{ user: "Sofia Rivera", text: "That sounds perfect." }] }
-        ]
-      },
-      {
-        id: 5,
-        title: "Creamy Tomato Soup",
-        author: "Jordan Lee",
-        cuisine: "Comfort Food",
-        tags: ["Vegetarian", "Under 30 min"],
-        ingredients: ["tomatoes", "garlic", "milk", "bread"],
-        likes: 172,
-        dislikes: 6,
-        saves: 85,
-        comments: 21,
-        activity: 81,
-        rating: 4.8,
-        time: 22,
-        summary: "A cozy soup that pairs with grilled cheese or toasted bread.",
-        color: "from-rose-500 to-red-500",
-        commentsThread: [
-          { user: "Alijah", text: "Could totally use this for 'In Your Pantry'.", replies: [] },
-          { user: "Jordan Lee", text: "That is the exact use case.", replies: [] }
-        ]
-      },
-      {
-        id: 6,
-        title: "Street-Style Veggie Rice",
-        author: "Chris Wu",
-        cuisine: "Asian",
-        tags: ["Peanut Allergy", "High Protein"],
-        ingredients: ["rice", "eggs", "spinach", "garlic"],
-        likes: 196,
-        dislikes: 11,
-        saves: 78,
-        comments: 24,
-        activity: 89,
-        rating: 4.7,
-        time: 19,
-        summary: "A flexible bowl that is easy to customize with whatever is in the fridge.",
-        color: "from-indigo-500 to-sky-500",
-        commentsThread: [
-          { user: "Avery", text: "This is a great base recipe.", replies: [{ user: "Chris Wu", text: "Exactly, change it as needed." }] },
-          { user: "Maria", text: "Added chili crisp instead of soy sauce.", replies: [] }
-        ]
-      }
-    ];
+    let pantryItems = [];
+    let recipes = [];
+    let trendingRecipes = [];
+    let topRecipes = [];
+
+    // Normalize an API recipe row into the shape the render functions expect.
+    function normalizeRecipe(r, idx) {
+      const tags = r.categoryTags ? r.categoryTags.split(',').map(t => t.trim()).filter(Boolean) : (r.tags || []);
+      return {
+        id: r.id,
+        title: r.title || r.name || 'Untitled',
+        author: r.authorName || r.author || 'Community',
+        cuisine: r.cuisineType || r.cuisine || '',
+        tags,
+        ingredients: r.ingredients || [],
+        likes: r.likes || 0,
+        dislikes: r.dislikes || 0,
+        saves: r.saves || 0,
+        comments: r.commentCount || 0,
+        activity: r.activity || 0,
+        rating: r.likes > 0 ? Math.min(5, 3.5 + r.likes / 100) : 0,
+        time: (r.prepTimeMin || 0) + (r.cookTimeMin || 0),
+        summary: r.description || r.summary || '',
+        color: COLORS[idx % COLORS.length],
+        commentsThread: []
+      };
+    }
+
+    async function loadRecipes() {
+      try {
+        const [trendRes, topRes, browseRes] = await Promise.all([
+          fetch(`${API}/api/recipes/trending`, { credentials: 'include' }),
+          fetch(`${API}/api/recipes/top`, { credentials: 'include' }),
+          fetch(`${API}/api/recipes`, { credentials: 'include' })
+        ]);
+        if (trendRes.ok) {
+          const j = await trendRes.json();
+          trendingRecipes = (j.data || []).map(normalizeRecipe);
+        }
+        if (topRes.ok) {
+          const j = await topRes.json();
+          topRecipes = (j.data || []).map(normalizeRecipe);
+        }
+        if (browseRes.ok) {
+          const j = await browseRes.json();
+          recipes = ((j.data && j.data.recipes) || j.data || []).map(normalizeRecipe);
+        }
+      } catch (e) { /* server not running — recipes stays empty */ }
+      render();
+    }
+
+    async function loadRecommendations() {
+      try {
+        const res = await fetch(`${API}/api/member/recipes/recommend`, { credentials: 'include' });
+        if (!res.ok) return;
+        const j = await res.json();
+        const recs = (j.data || []).map((r, i) => normalizeRecipe(r.recipe || r, i));
+        renderMiniList(els.inYourPantry, recs.slice(0, 4));
+      } catch (e) { /* ignore */ }
+    }
+
+    async function loadPantryPreview() {
+      try {
+        const res = await fetch(`${API}/api/member/pantry`, { credentials: 'include' });
+        if (!res.ok) return;
+        const j = await res.json();
+        pantryItems = (j.data || []).map(r => (r.ingredientName || r.ingredientId || '').toLowerCase()).filter(Boolean);
+        els.pantryPreview.innerHTML = pantryItems.map(item => `<span class="rounded-full border border-gray-700 bg-gray-900 px-3 py-1 text-xs text-gray-300">${item}</span>`).join('');
+      } catch (e) { /* ignore */ }
+    }
 
     const state = {
       search: "",
@@ -607,17 +550,16 @@
       els.guestBanner.classList.toggle('hidden', state.loggedIn);
       els.resultCount.textContent = `${visible.length} recipes found`;
 
-      const trending = [...recipes].sort((a, b) => b.activity - a.activity).slice(0, 4);
-      const top = [...recipes].sort((a, b) => (b.likes - b.dislikes) - (a.likes - a.dislikes)).slice(0, 4);
+      const tDisplay = trendingRecipes.length ? trendingRecipes.slice(0, 4) : [...recipes].sort((a, b) => b.activity - a.activity).slice(0, 4);
+      const topDisplay = topRecipes.length ? topRecipes.slice(0, 4) : [...recipes].sort((a, b) => (b.likes - b.dislikes) - (a.likes - a.dislikes)).slice(0, 4);
 
-      els.trendingGrid.innerHTML = trending.map(recipeCard).join('');
-      els.topGrid.innerHTML = top.map(recipeCard).join('');
+      els.trendingGrid.innerHTML = tDisplay.length ? tDisplay.map(recipeCard).join('') : '<p class="text-gray-500 text-sm col-span-full">No data yet.</p>';
+      els.topGrid.innerHTML = topDisplay.length ? topDisplay.map(recipeCard).join('') : '<p class="text-gray-500 text-sm col-span-full">No data yet.</p>';
       els.resultsGrid.innerHTML = visible.length ? visible.map(recipeCard).join('') : `
         <div class="col-span-full rounded-3xl border border-dashed border-gray-700 bg-gray-950 p-8 text-center text-gray-400">
-          No recipes match your filters. Try clearing a filter or searching something else.
+          ${recipes.length === 0 ? 'Connect to the backend to load community recipes.' : 'No recipes match your filters. Try clearing a filter or searching something else.'}
         </div>
       `;
-      els.pantryPreview.innerHTML = pantryItems.map(item => `<span class="rounded-full border border-gray-700 bg-gray-900 px-3 py-1 text-xs text-gray-300">${item}</span>`).join('');
 
       const selected = recipes.find(r => r.id === state.selectedRecipeId) || visible[0] || recipes[0];
       if (selected) renderPanel(selected);
@@ -634,34 +576,59 @@
       });
 
       document.querySelectorAll('.reaction-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
           e.stopPropagation();
           if (!state.loggedIn) return;
-          const id = Number(btn.dataset.id);
+          const id = btn.dataset.id;
           const action = btn.dataset.action;
-          const current = state.reactions.get(id) || { likes: 0, dislikes: 0 };
-          const next = { ...current };
-          if (action === 'like') next.likes += 1;
-          if (action === 'dislike') next.dislikes += 1;
-          if (action === 'save') {
-            if (state.savedRecipes.has(id)) state.savedRecipes.delete(id);
-            else state.savedRecipes.add(id);
-          }
-          state.reactions.set(id, next);
-          render();
+          try {
+            if (action === 'like') {
+              await fetch(`${API}/api/member/recipes/${id}/like`, {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isLike: true })
+              });
+            } else if (action === 'dislike') {
+              await fetch(`${API}/api/member/recipes/${id}/like`, {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isLike: false })
+              });
+            } else if (action === 'save') {
+              const isSaved = state.savedRecipes.has(id);
+              await fetch(`${API}/api/member/recipes/${id}/save`, {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ save: !isSaved })
+              });
+              if (isSaved) state.savedRecipes.delete(id);
+              else state.savedRecipes.add(id);
+            }
+          } catch (err) { /* ignore */ }
+          // Refresh detail panel counts from API
+          const numId = Number(id);
+          const recipe = [...recipes, ...trendingRecipes, ...topRecipes].find(r => r.id === id || r.id === numId);
+          if (recipe) renderPanel(recipe);
         });
       });
 
       document.querySelectorAll('.comment-form').forEach(form => {
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
           e.preventDefault();
           if (!state.loggedIn) return;
-          const recipeId = Number(form.dataset.id);
+          const recipeId = form.dataset.id;
           const textarea = form.querySelector('textarea');
           const text = textarea.value.trim();
           if (!text) return;
+          try {
+            await fetch(`${API}/api/member/comments`, {
+              method: 'POST', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ recipeId, content: text })
+            });
+          } catch (err) { /* ignore */ }
           const list = state.dynamicComments.get(recipeId) || [];
-          list.unshift({ user: 'You', text, replies: [] });
+          list.unshift({ user: window.currentUser?.username || 'You', text, replies: [] });
           state.dynamicComments.set(recipeId, list);
           textarea.value = '';
           render();
@@ -676,9 +643,22 @@
       });
     }
 
+    let searchTimer;
     els.searchInput.addEventListener('input', () => {
       state.search = els.searchInput.value;
-      render();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(async () => {
+        const q = state.search.trim();
+        try {
+          const url = q ? `${API}/api/recipes?q=${encodeURIComponent(q)}` : `${API}/api/recipes`;
+          const res = await fetch(url, { credentials: 'include' });
+          if (res.ok) {
+            const j = await res.json();
+            recipes = ((j.data && j.data.recipes) || j.data || []).map(normalizeRecipe);
+          }
+        } catch (e) { /* ignore */ }
+        render();
+      }, 350);
     });
 
     els.pantryMatchToggle.addEventListener('change', () => {
@@ -717,20 +697,23 @@
       render();
     });
 
-    // auth.js handles login modal open/close/submit.
-    // Hook into auth.js callbacks to sync this page's render state.
     window.onAuthLogin = function(user) {
       state.loggedIn = true;
       document.body.classList.add('member-view');
       els.sessionLabel.textContent = `Logged in as ${user.username}`;
       document.getElementById('guestBanner')?.classList.add('hidden');
+      loadPantryPreview();
+      loadRecommendations();
       render();
     };
     window.onAuthLogout = function() {
       state.loggedIn = false;
+      pantryItems = [];
       document.body.classList.remove('member-view');
       els.sessionLabel.textContent = 'Guest view';
       document.getElementById('guestBanner')?.classList.remove('hidden');
+      els.pantryPreview.innerHTML = '';
+      els.inYourPantry.innerHTML = '';
       render();
     };
 
@@ -742,7 +725,7 @@
       }
     });
 
-    render();
+    loadRecipes();
   </script>
 </body>
 </html>

@@ -242,11 +242,7 @@
 
     <!--Pantry list and modal actions-->
     <script>
-        const pantryItems = [
-            { name: 'Eggs', expiration: '03/29/2026', quantity: '9', unit: 'Count' },
-            { name: 'Banana', expiration: '04/09/2026', quantity: '2', unit: 'Count' },
-            { name: 'Milk', expiration: '04/12/2026', quantity: '1', unit: 'Gallon' }
-        ];
+        let pantryItems = [];
         let editingItemIndex = null;
         let allowedItems = [];
         let pendingImportReview = null;
@@ -1056,7 +1052,15 @@
             });
         }
 
-        function removeItem(index) {
+        async function removeItem(index) {
+            const item = pantryItems[index];
+            if (item && item.id) {
+                try {
+                    await fetch(`${API}/api/member/pantry/${item.id}`, {
+                        method: 'DELETE', credentials: 'include'
+                    });
+                } catch (e) { /* ignore network errors */ }
+            }
             pantryItems.splice(index, 1);
             renderPantryList();
         }
@@ -1064,6 +1068,33 @@
         function editItem(index) {
             openEditItemModal(index);
         }
+
+        const API = 'http://localhost:8080/smartpantry';
+
+        async function loadPantry() {
+            try {
+                const res = await fetch(`${API}/api/member/pantry`, { credentials: 'include' });
+                if (!res.ok) return;
+                const json = await res.json();
+                const rows = json.data || [];
+                pantryItems = rows.map(r => ({
+                    id: r.id,
+                    name: r.ingredientName || r.ingredientId,
+                    expiration: r.expirationDate || '',
+                    quantity: String(r.quantity),
+                    unit: r.unit || 'Count'
+                }));
+                document.getElementById('guestBanner')?.classList.add('hidden');
+                renderPantryList();
+            } catch (e) { /* server not running */ }
+        }
+
+        window.onAuthLogin = function() { loadPantry(); };
+        window.onAuthLogout = function() {
+            pantryItems = [];
+            renderPantryList();
+            document.getElementById('guestBanner')?.classList.remove('hidden');
+        };
 
         // Close add-item modal on outside click (auth modal outside-click handled by auth.js)
         window.addEventListener('click', function(event) {
@@ -1207,7 +1238,7 @@
             renderPantryList();
 
             if (addItemForm && itemNameInput) {
-                addItemForm.addEventListener('submit', function(e) {
+                addItemForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
                     const name = itemNameInput.value.trim();
                     const ok = allowedItems.some(it => it.toLowerCase() === name.toLowerCase());
@@ -1231,7 +1262,27 @@
                     };
 
                     if (editingItemIndex === null) {
-                        pantryItems.unshift(updatedItem);
+                        try {
+                            const res = await fetch(`${API}/api/member/pantry/add`, {
+                                method: 'POST',
+                                credentials: 'include',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    itemName: name,
+                                    quantity: parseFloat(quantity) || 1,
+                                    unit,
+                                    expirationDate: expirationValue || null
+                                })
+                            });
+                            if (res.status === 401) { toggleModal(); return; }
+                            if (res.ok) {
+                                await loadPantry();
+                            } else {
+                                pantryItems.unshift(updatedItem);
+                            }
+                        } catch (e) {
+                            pantryItems.unshift(updatedItem);
+                        }
                     } else {
                         pantryItems[editingItemIndex] = updatedItem;
                     }

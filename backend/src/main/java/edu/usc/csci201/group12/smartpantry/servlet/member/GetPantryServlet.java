@@ -30,6 +30,6 @@ public final class GetPantryServlet extends AbstractJsonServlet {
             writeJson(resp, HttpServletResponse.SC_FORBIDDEN, JsonApiResponse.fail("Member account required"));
             return;
         }
-        writeOk(resp, pantryItemDao.getByUser(member.getId()));
+        writeOk(resp, pantryItemDao.getByUserWithNames(member.getId()));
     }
 }
