@@ -7,6 +7,7 @@ package edu.usc.csci201.group12.smartpantry.web;
 
 import edu.usc.csci201.group12.smartpantry.background.BackgroundJobs;
 import edu.usc.csci201.group12.smartpantry.background.ExpiryCheckJob;
+import edu.usc.csci201.group12.smartpantry.dao.IngredientDao;
 import edu.usc.csci201.group12.smartpantry.dao.InMemoryUserStore;
 import edu.usc.csci201.group12.smartpantry.dao.JdbcUserStore;
 import edu.usc.csci201.group12.smartpantry.dao.PantryItemDao;
@@ -53,6 +54,10 @@ public final class SmartPantryBootstrapListener implements ServletContextListene
 
         if (ctx.getAttribute(ContextKeys.PASSWORD_HASHER) == null) {
             ctx.setAttribute(ContextKeys.PASSWORD_HASHER, new PasswordHasher());
+        }
+
+        if (useJdbc) {
+            new IngredientDao().seedIfEmpty();
         }
 
         RecipeRepository recipeRepo;
