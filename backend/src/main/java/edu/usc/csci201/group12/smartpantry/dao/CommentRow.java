@@ -12,6 +12,7 @@ public class CommentRow {
     private String body;
     private Timestamp createdAt;
     private boolean deleted;
+    private String username;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -33,4 +34,7 @@ public class CommentRow {
 
     public boolean isDeleted() { return deleted; }
     public void setDeleted(boolean deleted) { this.deleted = deleted; }
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 }

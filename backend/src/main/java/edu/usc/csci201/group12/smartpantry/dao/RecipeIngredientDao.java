@@ -36,12 +36,21 @@ public class RecipeIngredientDao {
 
     public List<RecipeIngredientRow> getByRecipe(String recipeId) {
         List<RecipeIngredientRow> list = new ArrayList<>();
-        String sql = "SELECT * FROM RECIPE_INGREDIENTS WHERE recipe_id = ?";
+        String sql = """
+                SELECT ri.*, i.name AS ingredient_name
+                FROM RECIPE_INGREDIENTS ri
+                LEFT JOIN INGREDIENTS i ON i.id = ri.ingredient_id
+                WHERE ri.recipe_id = ?
+                """;
         try (Connection conn = JdbcConnectionFactory.openConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, recipeId);
             try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) list.add(mapRow(rs));
+                while (rs.next()) {
+                    RecipeIngredientRow row = mapRow(rs);
+                    row.setIngredientName(rs.getString("ingredient_name"));
+                    list.add(row);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();

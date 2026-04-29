@@ -188,20 +188,21 @@ window.addEventListener('click', function (e) {
 // ── WebSocket alert connection ────────────────────────────────────────────────
 
 function connectAlertSocket() {
-    const wsUrl = API_BASE.replace(/^http/, 'ws') + '/ws/alerts';
+    const wsUrl = API_BASE.replace(/^http/, 'ws') + '/ws/pantry';
     const ws = new WebSocket(wsUrl);
 
     ws.onmessage = function (event) {
         try {
-            const data = JSON.parse(event.data);
-            if (data.type === 'expiry_alert' && data.items && data.items.length > 0) {
-                showExpiryToast(data.items);
+            const msg = JSON.parse(event.data);
+            if (msg.type === 'EXPIRING_ITEM') {
+                showExpiryToast(msg.ingredientName, msg.daysLeft);
+            } else if (msg.type === 'PANTRY_UPDATED') {
+                if (typeof window.onPantryUpdated === 'function') window.onPantryUpdated(msg);
             }
         } catch (e) { /* ignore malformed messages */ }
     };
 
     ws.onclose = function () {
-        // Reconnect after 10 seconds if still logged in
         if (window.currentUser) setTimeout(connectAlertSocket, 10000);
     };
 
@@ -216,7 +217,7 @@ function disconnectAlertSocket() {
     }
 }
 
-function showExpiryToast(items) {
+function showExpiryToast(ingredientName, daysLeft) {
     let toast = document.getElementById('_expiryToast');
     if (!toast) {
         toast = document.createElement('div');
@@ -229,11 +230,9 @@ function showExpiryToast(items) {
         ].join(';');
         document.body.appendChild(toast);
     }
-    const count = items.length;
-    const soonest = items.reduce((min, i) => (i.daysLeft < min ? i.daysLeft : min), Infinity);
-    toast.textContent = count === 1
-        ? `1 pantry item expires in ${soonest} day${soonest !== 1 ? 's' : ''}!`
-        : `${count} pantry items expiring soon — soonest in ${soonest} day${soonest !== 1 ? 's' : ''}!`;
+    const name = ingredientName || 'A pantry item';
+    const d = typeof daysLeft === 'number' ? daysLeft : '?';
+    toast.textContent = `${name} expires in ${d} day${d !== 1 ? 's' : ''}!`;
     toast.style.display = 'block';
     clearTimeout(toast._timer);
     toast._timer = setTimeout(() => { toast.style.display = 'none'; }, 8000);

@@ -54,15 +54,21 @@ public class CommentDao {
     public List<CommentRow> getTopLevelByRecipe(String recipeId) {
         List<CommentRow> list = new ArrayList<>();
         String sql = """
-                SELECT * FROM COMMENTS
-                WHERE recipe_id = ? AND parent_comment_id IS NULL AND is_deleted = 0
-                ORDER BY created_at ASC
+                SELECT c.*, u.username
+                FROM COMMENTS c
+                LEFT JOIN USERS u ON u.id = c.user_id
+                WHERE c.recipe_id = ? AND c.parent_comment_id IS NULL AND c.is_deleted = 0
+                ORDER BY c.created_at ASC
                 """;
         try (Connection conn = JdbcConnectionFactory.openConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, recipeId);
             try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) list.add(mapRow(rs));
+                while (rs.next()) {
+                    CommentRow row = mapRow(rs);
+                    row.setUsername(rs.getString("username"));
+                    list.add(row);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();

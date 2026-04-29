@@ -10,6 +10,7 @@ public class RecipeIngredientRow {
     private String unit;
     private String notes;
     private boolean optional;
+    private String ingredientName;
 
     public RecipeIngredientRow() {}
 
@@ -33,4 +34,7 @@ public class RecipeIngredientRow {
 
     public boolean isOptional() { return optional; }
     public void setOptional(boolean optional) { this.optional = optional; }
+
+    public String getIngredientName() { return ingredientName; }
+    public void setIngredientName(String ingredientName) { this.ingredientName = ingredientName; }
 }
