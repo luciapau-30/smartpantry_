@@ -97,7 +97,7 @@
 
 ### `origin/lucia/recommendation-engine`
 **Owner:** Lucia
-**What's here:** Complete recommendation pipeline — the most algorithmically complex branch.
+**What's here:** Complete recommendation pipeline 
 - `IngredientSynonymResolver` — loads `synonyms.json`, strips adjective modifiers (fresh/dried/chopped/etc.), maps variants to canonical names
 - `UnitNormalizer` — converts volume → ml, weight → g, count → each for quantity comparison
 - `PantryMatcher` — returns `CoverageResult(ingredientFound, quantityRatio)` for a recipe ingredient vs. a pantry list
@@ -158,13 +158,17 @@
 ## What Has Been Done
 
 ### Frontend
-- [x] Explore/Community page with search, filter chips, guest/member distinction
-- [x] My Pantry page (UI layout)
-- [x] Add Item form with inline suggestions and validation
-- [x] My Recipes page (UI layout)
-- [x] Login button UI (wired to backend in `Jeff_integration`)
+- [x] Explore/Community page — search, filter chips, guest/member distinction; trending/top/browse from real API
+- [x] My Pantry page — full UI (items list, edit/delete, CSV import, text import); add/delete wired to backend
+- [x] Add Item form — submit POSTs to `POST /api/member/pantry/add`
+- [x] My Recipes page — fetches `GET /api/member/recipes/mine` on login
+- [x] Login/register modal wired to backend via `auth.js` (all 4 pages)
 - [x] Tailwind CSS dark theme across all pages
 - [x] Guest banner / restricted-action messaging
+- [x] Like/dislike/save buttons call real API endpoints
+- [x] Comments submit to `POST /api/member/comments`
+- [ ] Recipe detail panel — opens but uses local data; real ingredients/steps/comments not fetched
+- [ ] Upload Recipe form — not wired to backend
 
 ### Backend (Java / Maven / Tomcat)
 - [x] Maven WAR project, Java 17, Jakarta Servlet 6.0
@@ -233,7 +237,7 @@
 | **Replace `InMemoryUserStore` with JDBC** | ✅ Done | `JdbcUserStore` wired via `SmartPantryBootstrapListener` |
 | **Replace `InMemoryRecipeRepository` with JDBC** | ✅ Done | `JdbcRecipeRepository` wired; builds full domain objects for recommender |
 | **Add missing REST endpoints** | ✅ Done | pantry GET/DELETE, recipes mine/saved/detail/comments, like/save, trending, top |
-| **Wire frontend fetch() calls to backend** | ❌ Not done | `index.html`, `pantry.html`, `recipes.html` still use hardcoded data — no `fetch()` calls |
+| **Wire frontend fetch() calls to backend** | ✅ Done | `index.html`, `pantry.html`, `recipes.html` all fetch from real API endpoints |
 | **Background thread + WebSocket alerts** | ✅ Done | `ExpiryCheckerThread` + `AlertWebSocketEndpoint` + client toast in `auth.js` |
 
 ### Backend — Missing Endpoints
@@ -256,7 +260,7 @@
 ### CSCI 201 Requirements — Not Yet Implemented
 | Requirement | What's Needed |
 |-------------|--------------|
-| **Thread pool (T2)** | Tomcat handles HTTP request threads natively; `ExpiryCheckerThread` uses a `ScheduledExecutorService` — explicit pool for CPU-bound background work not yet added |
+| **Thread pool (T2)** | ✅ Done — `BackgroundJobs` wraps a named `ScheduledThreadPool`; separate from Tomcat's HTTP pool |
 | **Background thread for expiry checking (T3)** | ✅ Done — `ExpiryCheckerThread` runs every 60 minutes, queries all expiring items, pushes WebSocket alerts |
 | **WebSockets / live updates (T4)** | ✅ Done — `AlertWebSocketEndpoint` pushes expiry alerts to connected users; client auto-reconnects |
 | **Expiration alerts (F14)** | ✅ Done — toast notification shown in browser via `showExpiryToast()` in `auth.js` |
@@ -265,13 +269,13 @@
 | Page/Feature | What's Needed |
 |-------------|--------------|
 | Login / register modal | ✅ Done — `auth.js` shared across all pages; tabbed Sign In / Create Account modal wired to backend |
-| Pantry page | Fetch from `GET /api/member/pantry`, render items with expiry badges, delete button |
-| Add Item form | Wire submit to `POST /api/member/pantry/add` |
-| Community page | Replace hardcoded recipes with `GET /api/recipes`; wire like/dislike/save buttons |
-| Recipe detail modal/page | Fetch `GET /api/recipes/{id}`, show ingredients, steps, threaded comments |
-| "In Your Pantry" section | Fetch from `GET /api/member/recipes/recommend`, surface `pantryScore` |
-| My Recipes page | Fetch from `GET /api/member/recipes/mine`, link to upload form |
-| Upload Recipe form | Wire to `POST /api/member/recipes/upload` |
+| Pantry page | ✅ Done — fetches `GET /api/member/pantry`, delete calls `DELETE /api/member/pantry/{id}` |
+| Add Item form | ✅ Done — form POSTs to `POST /api/member/pantry/add`, reloads list |
+| Community page | ✅ Done — trending/top/browse from API; like/dislike/save buttons call real endpoints |
+| Recipe detail modal/page | ⚠️ Partial — panel opens but shows local normalized data; real ingredients/steps/comments not fetched from `GET /api/recipes/{id}` |
+| "In Your Pantry" section | ✅ Done — fetches `GET /api/member/recipes/recommend` on login |
+| My Recipes page | ✅ Done — fetches `GET /api/member/recipes/mine` on login |
+| Upload Recipe form | ❌ Not done — form exists on `add-item.html`; submit not wired to `POST /api/member/recipes/upload` |
 | Shopping list page | New page; call `GET /api/member/shopping-list` |
 | Guest demo | Allow unauthenticated user one browse + one recipe generation without saving |
 | Real-time alerts | ✅ Done — WebSocket connects on login, toast shown on expiry alert push |
@@ -293,7 +297,7 @@
 3. ✅ **Merge** `lucia/recommendation-engine` → `dev` (recommendation engine)
 4. ✅ **Add** missing REST endpoints (pantry GET/DELETE, likes, saves, comments GET, trending, top, recipe detail)
 5. ✅ **Add** background expiry thread + WebSocket endpoint
-6. ❌ **Wire** each frontend page to the real API (replace hardcoded data with `fetch()` calls)
+6. ⚠️ **Wire** each frontend page to the real API — data loading done; recipe detail panel still uses local object (no real ingredients/steps/comments from `GET /api/recipes/{id}`)
 7. ✅ **Implement** login/register modal flow end-to-end (`auth.js` + tabbed modal on all 4 pages)
 8. ❌ **Seed** `INGREDIENTS` table and populate `synonyms.json`
 9. ❌ **Test** with ≥ 8 concurrent users; verify < 5s recommendation load time
@@ -302,11 +306,11 @@
 
 ## Team Ownership Reference
 
-| Area | Branch | Owner |
-|------|--------|-------|
-| Frontend HTML/CSS | `main` | David, Alijah, Jeffrey |
-| Auth + servlet foundation | `archit422/backend` → `archit-chenyang/integration` | Archit |
-| Class hierarchy + member servlets | `archit-chenyang/integration` | Archit + Chenyang |
-| Recommendation engine | `lucia/recommendation-engine` | Lucia |
-| MySQL DAO layer + schema | `zeqiang/database` | Zeqiang |
-| Frontend–backend wiring (index.html) | `Jeff_integration` | Jeffrey |
+|         Area                          |                     Branch                          |               Owner           |
+|        ------                         |--------                                             |-------                        |
+| Frontend HTML/CSS                     | `main`                                              | David, Alijah, Jeffrey        |
+| Auth + servlet foundation             | `archit422/backend` → `archit-chenyang/integration` | Archit                        |
+| Class hierarchy + member servlets     | `archit-chenyang/integration`                       | Archit + Chenyang             |
+| Recommendation engine                 | `lucia/recommendation-engine`                       | Lucia                         |
+| MySQL DAO layer + schema              | `zeqiang/database`                                  | Zeqiang                       |
+| Frontend–backend wiring (index.html)  | `Jeff_integration   `                               | Jeffrey                       |
