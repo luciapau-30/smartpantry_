@@ -163,41 +163,45 @@ Two new methods added to `RecipeLikeDao`: `getTrendingRecipeIds(limit)` and `get
 
 ---
 
-## Step 5 — Background expiry thread + WebSocket push alerts
+## Step 5 — T2/T3/T4/F14: thread pool, background expiry job, WebSocket alerts
 **Date:** 2026-04-26
-**Commit:** `4388609`
-**Who:** Lucia
+**Branch:** `lucia/background-thread-websocket` merged into `dev`
 
 ### What was added
+A managed thread pool, a periodic expiry-check job that runs on it, a Jakarta WebSocket endpoint that authenticated clients connect to, and a small broadcaster facade that lets servlets and background jobs push events without depending on the WebSocket API directly. Together these satisfy CSCI 201 rubric items T2 (thread pool), T3 (background thread), T4 (WebSockets), and the user-facing F14 (expiration alerts).
 
-#### Backend — new files
-| File | What it does |
-|------|-------------|
-| `websocket/HttpSessionConfigurator.java` | `ServerEndpointConfig.Configurator` subclass; copies the HTTP session into the WebSocket handshake properties so the endpoint can identify the user |
-| `websocket/AlertWebSocketEndpoint.java` | `@ServerEndpoint("/ws/alerts")`; maintains a `ConcurrentHashMap<userId, Session>`; exposes `sendToUser()` and `getConnectedUserIds()` for the background thread |
-| `web/ExpiryCheckerThread.java` | Single-daemon-thread `ScheduledExecutorService`; fires `checkAndNotify()` every 60 minutes; queries `PantryItemDao.getAllExpiringSoon(3)`, groups results by userId, pushes JSON alerts to connected users only |
+| New file | Purpose |
+|----------|---------|
+| `background/BackgroundJobs.java` | T2: wraps a 4-thread daemon `ScheduledExecutorService`; `scheduleAtFixedRate` swallows `Throwable` so a buggy job can't kill the pool; `shutdown()` waits up to 5s on context-destroy |
+| `background/ExpiryCheckJob.java` | T3 + F14: every 5 min, iterates *currently connected* userIds, calls `PantryItemDao.getExpiringSoonWithName(userId, 3)`, and for each row not previously alerted fires `PantryEventBroadcaster.expiringItem(...)`. No-ops cleanly when `PANTRY_DB_URL` is unset (dev mode) |
+| `websocket/PantryWebSocket.java` | T4: `@ServerEndpoint("/ws/pantry")`; custom `Configurator` lifts the `smartpantry.userId` attribute from `HttpSession` into the per-connection `EndpointConfig` so `onOpen` can identify the caller; tracks `ConcurrentHashMap<String, Set<Session>>` for multi-tab fan-out; `pushToUser(userId, payload)` is the only outbound API |
+| `websocket/PantryEventBroadcaster.java` | Thin facade in front of `PantryWebSocket`; servlets/jobs call `pantryUpdated(...)` or `expiringItem(...)` so they don't depend on the WebSocket framework |
+| `websocket/AlertPayload.java` | Serialised by Gson into the WS frame. Two `type` values today: `EXPIRING_ITEM` and `PANTRY_UPDATED` |
+| `dao/ExpiringPantryItem.java` | DTO for the joined PANTRY_ITEMS × INGREDIENTS result row so payloads carry a human-readable `ingredientName` |
 
-#### Backend — modified files
-| File | Change |
-|------|--------|
-| `dao/PantryItemDao.java` | Added `getAllExpiringSoon(int withinDays)` — queries all users' items expiring within N days (no userId filter; background thread needs all users) |
-| `dao/RecipeLikeDao.java` | Added `getTrendingRecipeIds(limit)` and `getTopLikedRecipeIds(limit)` using a shared private helper |
-| `web/ContextKeys.java` | Added `EXPIRY_CHECKER` constant |
-| `web/SmartPantryBootstrapListener.java` | Added block to create and start `ExpiryCheckerThread` at app startup; added `contextDestroyed()` to stop it cleanly |
-| `pom.xml` | Added `jakarta.websocket-client-api:2.1.0` (provided) — required in addition to `jakarta.websocket-api` because the 2.1 API is split: `websocket-api` is server-only and is missing `Session`, `OnOpen`, `OnClose`, `OnError`, `EndpointConfig`; Tomcat ships both at runtime |
+| Modified file | Change |
+|---------------|--------|
+| `pom.xml` | WebSocket deps bumped to 2.1.1; added `junit-jupiter:5.10.3` (test scope) |
+| `web/ContextKeys.java` | Replaced `EXPIRY_CHECKER` with `BACKGROUND_JOBS` and `EVENT_BROADCASTER` constants |
+| `web/SmartPantryBootstrapListener.java` | Builds the broadcaster + thread pool in `contextInitialized`, schedules `ExpiryCheckJob` at 5-min fixed rate (initial delay 30s), calls `BackgroundJobs.shutdown()` in `contextDestroyed` |
+| `dao/PantryItemDao.java` | Added `getExpiringSoonWithName(userId, withinDays)` — LEFT JOIN with INGREDIENTS for human-readable names; kept `getAllExpiringSoon(withinDays)` for all-user queries |
+| `servlet/member/AddToPantryServlet.java` | After successful insert, fires `broadcaster.pantryUpdated(userId, "added", pantryItemId)` |
+| `servlet/member/DeletePantryItemServlet.java` | After successful delete, fires `broadcaster.pantryUpdated(userId, "removed", itemId)` |
 
-#### Frontend — modified files
-| File | Change |
-|------|--------|
-| `FrontendCode/auth.js` | Added `connectAlertSocket()` — opens `ws://.../ws/alerts`, handles `expiry_alert` messages, auto-reconnects after 10s if still logged in. Added `disconnectAlertSocket()` — called on logout, clears `window._alertWs`. Added `showExpiryToast(items)` — dynamically creates a fixed purple toast showing item count and soonest expiry days. Called from `onLoggedIn`/`onLoggedOut` respectively. |
+### Design notes
+- **Why scope to connected users:** the expiry job calls `PantryWebSocket.connectedUserIds()` first and skips the DB entirely if nobody is listening.
+- **Why dedupe per-tick:** without it, the user gets the same toast every 5 minutes. The job keeps a `Set<pantryItemId>` per user and only alerts the first time it sees an id.
+- **Why `provided` scope:** Tomcat 10 ships the WebSocket JARs; bundling them causes `LinkageError` at deploy time.
 
-### Alert JSON format
-```json
-{ "type": "expiry_alert", "items": [{ "id": "...", "ingredientId": "...", "daysLeft": 2, "expirationDate": "2026-04-28" }] }
+### Frontend wire-up (for Alijah)
+```js
+const ws = new WebSocket(`ws://${location.host}/smartpantry/ws/pantry`);
+ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    if (msg.type === 'EXPIRING_ITEM') {
+        // toast: `${msg.ingredientName} expires in ${msg.daysLeft} day(s)`
+    } else if (msg.type === 'PANTRY_UPDATED') {
+        // re-fetch GET /api/member/pantry
+    }
+};
 ```
-
-### WebSocket dependency note
-`jakarta.websocket-api:2.1.0` on Maven Central is server-side only. The shared/client-side classes (`Session`, `OnOpen`, `OnClose`, `OnError`, `EndpointConfig`, `HandshakeResponse`) are published as a separate `jakarta.websocket-client-api:2.1.0` artifact. Both must be on the compile classpath; Tomcat 10.1 provides both at runtime.
-
-### Build verified
-`mvn clean package -DskipTests` → **BUILD SUCCESS**

@@ -7,6 +7,7 @@ import edu.usc.csci201.group12.smartpantry.model.content.Recipe;
 import edu.usc.csci201.group12.smartpantry.model.content.Recipe.RecipeIngredient;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -40,7 +41,7 @@ public final class InMemoryRecipeRepository implements RecipeRepository {
      */
     private final List<Recipe> publishedFull = List.of(
             new Recipe(
-                    "r1", "system", null, null,
+                    "r1", "system", Instant.now(), Instant.now(),
                     "Lentil soup", "Hearty soup with pantry staples.", "", 10, 30, 4, true, "Mediterranean",
                     List.of(
                             new RecipeIngredient("ing-lentils",  "ing-lentils",  "lentils",          new BigDecimal("200"), "g",    "", false),
@@ -50,7 +51,7 @@ public final class InMemoryRecipeRepository implements RecipeRepository {
                     ),
                     List.of("Dice the vegetables.", "Simmer lentils and vegetables in broth for 30 min.")),
             new Recipe(
-                    "r2", "system", null, null,
+                    "r2", "system", Instant.now(), Instant.now(),
                     "Tomato pasta", "Quick weeknight pasta.", "", 5, 20, 2, true, "Italian",
                     List.of(
                             new RecipeIngredient("ing-pasta",    "ing-pasta",    "pasta",             new BigDecimal("200"), "g",    "", false),
@@ -60,7 +61,7 @@ public final class InMemoryRecipeRepository implements RecipeRepository {
                     ),
                     List.of("Cook pasta al dente.", "Sauté garlic in olive oil, add tomatoes, toss with pasta.")),
             new Recipe(
-                    "r3", "system", null, null,
+                    "r3", "system", Instant.now(), Instant.now(),
                     "Garden salad", "Fresh side salad.", "", 10, 0, 2, true, "American",
                     List.of(
                             new RecipeIngredient("ing-lettuce",  "ing-lettuce",  "lettuce",           new BigDecimal("1"),   "whole","", false),

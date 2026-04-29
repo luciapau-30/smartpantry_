@@ -9,6 +9,7 @@ import edu.usc.csci201.group12.smartpantry.model.User;
 import edu.usc.csci201.group12.smartpantry.security.RequestUsers;
 import edu.usc.csci201.group12.smartpantry.servlet.AbstractJsonServlet;
 import edu.usc.csci201.group12.smartpantry.web.ContextKeys;
+import edu.usc.csci201.group12.smartpantry.websocket.PantryEventBroadcaster;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -54,6 +55,11 @@ public final class AddToPantryServlet extends AbstractJsonServlet {
 
         try {
             String pantryItemId = member.addToPantry(in.ingredientId(), in.quantity(), in.unit(), expiration);
+            PantryEventBroadcaster broadcaster = (PantryEventBroadcaster)
+                    req.getServletContext().getAttribute(ContextKeys.EVENT_BROADCASTER);
+            if (broadcaster != null) {
+                broadcaster.pantryUpdated(member.getId(), "added", pantryItemId);
+            }
             writeJson(resp, HttpServletResponse.SC_CREATED, JsonApiResponse.ok(Map.of("pantryItemId", pantryItemId)));
         } catch (SQLException ex) {
             writeJson(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, JsonApiResponse.fail("Database error"));

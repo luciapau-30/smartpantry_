@@ -238,7 +238,7 @@
 | **Replace `InMemoryRecipeRepository` with JDBC** | ✅ Done | `JdbcRecipeRepository` wired; builds full domain objects for recommender |
 | **Add missing REST endpoints** | ✅ Done | pantry GET/DELETE, recipes mine/saved/detail/comments, like/save, trending, top |
 | **Wire frontend fetch() calls to backend** | ✅ Done | `index.html`, `pantry.html`, `recipes.html` all fetch from real API endpoints |
-| **Background thread + WebSocket alerts** | ✅ Done | `ExpiryCheckerThread` + `AlertWebSocketEndpoint` + client toast in `auth.js` |
+| **Thread pool + background thread + WebSockets (T2/T3/T4/F14)** | ✅ Done | `BackgroundJobs` (4-thread `ScheduledExecutorService`) + `ExpiryCheckJob` (5-min period, 3-day window) + `PantryWebSocket` (`/ws/pantry`) + `PantryEventBroadcaster`; pantry add/delete servlets fire `PANTRY_UPDATED` events |
 
 ### Backend — Missing Endpoints
 | Endpoint | Status | Purpose |
@@ -257,13 +257,13 @@
 | `POST /api/member/recipes/{id}/make` | ❌ Not done | "Make recipe" — deduct ingredients from pantry |
 | `GET /api/member/shopping-list` | ❌ Not done | Generate shopping list from meal plan |
 
-### CSCI 201 Requirements — Not Yet Implemented
-| Requirement | What's Needed |
-|-------------|--------------|
-| **Thread pool (T2)** | ✅ Done — `BackgroundJobs` wraps a named `ScheduledThreadPool`; separate from Tomcat's HTTP pool |
-| **Background thread for expiry checking (T3)** | ✅ Done — `ExpiryCheckerThread` runs every 60 minutes, queries all expiring items, pushes WebSocket alerts |
-| **WebSockets / live updates (T4)** | ✅ Done — `AlertWebSocketEndpoint` pushes expiry alerts to connected users; client auto-reconnects |
-| **Expiration alerts (F14)** | ✅ Done — toast notification shown in browser via `showExpiryToast()` in `auth.js` |
+### CSCI 201 Requirements — Status
+| Requirement | Status | Where |
+|-------------|--------|-------|
+| **Thread pool (T2)** | ✅ Done | `background/BackgroundJobs.java` — 4-thread daemon `ScheduledExecutorService`, started in `SmartPantryBootstrapListener.contextInitialized` and stopped in `contextDestroyed` |
+| **Background thread for expiry checking (T3)** | ✅ Done | `background/ExpiryCheckJob.java` scheduled every 5 min on the T2 pool; uses `PantryItemDao.getExpiringSoonWithName(userId, 3)` |
+| **WebSockets / live updates (T4)** | ✅ Done | `websocket/PantryWebSocket.java` mapped at `/ws/pantry`; lifts userId from `HttpSession` via custom `Configurator`; tracks `Map<userId, Set<Session>>` for multi-tab fan-out |
+| **Expiration alerts (F14)** | ✅ Done | `ExpiryCheckJob` calls `PantryEventBroadcaster.expiringItem(...)` which serialises `AlertPayload` (`type=EXPIRING_ITEM`) and pushes to every open socket for that user. Already-alerted items are deduped per-tick. |
 
 ### Frontend — Missing Functionality
 | Page/Feature | What's Needed |

@@ -132,6 +132,48 @@ public class PantryItemDao {
         return list;
     }
 
+    // T3 background-thread query: JOINs with INGREDIENTS for human-readable alert payloads.
+    public List<ExpiringPantryItem> getExpiringSoonWithName(String userId, int withinDays) {
+        List<ExpiringPantryItem> list = new ArrayList<>();
+        String sql = """
+                SELECT p.id           AS pantry_item_id,
+                       p.user_id      AS user_id,
+                       p.ingredient_id AS ingredient_id,
+                       i.name         AS ingredient_name,
+                       p.quantity     AS quantity,
+                       p.unit         AS unit,
+                       p.expiration_date AS expiration_date
+                FROM PANTRY_ITEMS p
+                LEFT JOIN INGREDIENTS i ON i.id = p.ingredient_id
+                WHERE p.user_id = ?
+                  AND p.expiration_date IS NOT NULL
+                  AND p.expiration_date <= DATE_ADD(CURDATE(), INTERVAL ? DAY)
+                ORDER BY p.expiration_date ASC
+                """;
+        try (Connection conn = JdbcConnectionFactory.openConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, userId);
+            stmt.setInt(2, withinDays);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ExpiringPantryItem item = new ExpiringPantryItem();
+                    item.setPantryItemId(rs.getString("pantry_item_id"));
+                    item.setUserId(rs.getString("user_id"));
+                    item.setIngredientId(rs.getString("ingredient_id"));
+                    item.setIngredientName(rs.getString("ingredient_name"));
+                    item.setQuantity(rs.getDouble("quantity"));
+                    item.setUnit(rs.getString("unit"));
+                    Date expDate = rs.getDate("expiration_date");
+                    if (expDate != null) item.setExpirationDate(expDate.toLocalDate());
+                    list.add(item);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public boolean updateQuantity(String id, double quantity) {
         String sql = "UPDATE PANTRY_ITEMS SET quantity = ? WHERE id = ?";
         try (Connection conn = JdbcConnectionFactory.openConnection();

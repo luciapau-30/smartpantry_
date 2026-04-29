@@ -23,6 +23,22 @@
             <version>6.0.0</version>
             <scope>provided</scope>
         </dependency>
+        <!-- T4: Jakarta WebSocket — provided by Tomcat 10+ at runtime.
+             In 2.1 the API was split: client-api has the core types (Session, OnOpen,
+             OnClose, EndpointConfig, CloseReason, ...) and websocket-api adds the
+             @ServerEndpoint server-side annotations and ServerEndpointConfig. We need both. -->
+        <dependency>
+            <groupId>jakarta.websocket</groupId>
+            <artifactId>jakarta.websocket-client-api</artifactId>
+            <version>2.1.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.websocket</groupId>
+            <artifactId>jakarta.websocket-api</artifactId>
+            <version>2.1.1</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
@@ -39,18 +55,12 @@
             <artifactId>mysql-connector-j</artifactId>
             <version>8.3.0</version>
         </dependency>
-        <!-- Step 5: WebSocket API — both JARs needed at compile time; Tomcat 10.1 provides both at runtime -->
+        <!-- T2/T3/T4 unit tests — Surefire 3.x picks up JUnit 5 automatically. -->
         <dependency>
-            <groupId>jakarta.websocket</groupId>
-            <artifactId>jakarta.websocket-api</artifactId>
-            <version>2.1.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.websocket</groupId>
-            <artifactId>jakarta.websocket-client-api</artifactId>
-            <version>2.1.0</version>
-            <scope>provided</scope>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.3</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
