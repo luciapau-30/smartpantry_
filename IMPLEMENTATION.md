@@ -200,6 +200,9 @@
 - [x] `HttpSessionConfigurator` — passes HTTP session into WebSocket handshake for user identification
 - [x] `auth.js` — shared auth across all pages; login/register/logout modals wired to backend; WebSocket client with auto-reconnect and toast notifications
 - [x] `GET /api/ingredients` — `IngredientListServlet`; returns full ingredient catalog for frontend autocomplete
+- [x] `POST /api/member/recipes/{id}/make` — added to `RecipeInteractionServlet`; consumes matching pantry items (earliest-expiring first), returns used/missing lists, fires WebSocket pantry-updated event
+- [x] `GET /api/member/shopping-list` — `ShoppingListServlet`; aggregates required quantities across saved recipes, subtracts pantry stock, returns sorted missing list
+- [x] `POST /api/guest/demo` — `GuestDemoServlet`; accepts ingredient name list, resolves to pantry items via IngredientDao, runs recommender, returns top 5 scored recipes (no auth required, F15)
 
 ### Recommendation Engine
 - [x] Ingredient synonym resolution with modifier stripping
@@ -255,9 +258,10 @@
 | `GET /api/recipes/trending` | ✅ Done | Trending recipes (last 24 hours) |
 | `GET /api/recipes/top` | ✅ Done | Top recipes (all-time likes) |
 | `GET /api/ingredients` | ✅ Done | List all seeded ingredients (id + name + category + defaultUnit) — used by Upload Recipe form |
-| `PUT /api/member/preferences` | ❌ Not done | Set dietary preferences + allergies |
-| `POST /api/member/recipes/{id}/make` | ❌ Not done | "Make recipe" — deduct ingredients from pantry |
-| `GET /api/member/shopping-list` | ❌ Not done | Generate shopping list from meal plan |
+| `GET /api/member/preferences` | ✅ Done | Returns preferred cuisines list |
+| `PUT /api/member/preferences` | ✅ Done | Saves preferred cuisines to USER_PREFERENCES table; wired into RecipeScorer.prefScore() |
+| `POST /api/member/recipes/{id}/make` | ✅ Done | Deducts matching pantry items by ingredient_id; returns used/missing lists; fires WebSocket pantry-updated event |
+| `GET /api/member/shopping-list` | ✅ Done | Aggregates missing ingredients across all saved recipes vs. pantry stock; sorted alphabetically |
 
 ### CSCI 201 Requirements — Status
 | Requirement | Status | Where |
@@ -278,14 +282,14 @@
 | "In Your Pantry" section | ✅ Done — fetches `GET /api/member/recipes/recommend` on login |
 | My Recipes page | ✅ Done — fetches `GET /api/member/recipes/mine` on login |
 | Upload Recipe form | ✅ Done — modal on `recipes.html`; ingredient autocomplete via `GET /api/ingredients`; POSTs to `POST /api/member/recipes/upload` |
-| Shopping list page | New page; call `GET /api/member/shopping-list` |
-| Guest demo | Allow unauthenticated user one browse + one recipe generation without saving |
+| Shopping list page | ✅ Done — section in `pantry.html`; loads on login, shows ingredient + quantity needed to cover all saved recipes |
+| Guest demo | ✅ Done — ingredient input in guest banner; `POST /api/guest/demo` runs recommender with temp pantry; top 5 results shown inline, no auth required |
 | Real-time alerts | ✅ Done — WebSocket connects on login, toast shown on expiry alert push |
 
 ### Algorithm / Data Quality
 | Item | What's Needed |
 |------|--------------|
-| `synonyms.json` content | Currently minimal; needs to be populated with real ingredient synonyms |
+| `synonyms.json` content | ✅ Done — expanded from 25 to 64 canonical entries covering all 71 seeded ingredients plus common variants |
 | Trending score endpoint | Query DB: `SELECT recipe_id, COUNT(*) FROM RECIPE_LIKES WHERE created_at > NOW() - INTERVAL 24 HOUR GROUP BY recipe_id ORDER BY COUNT(*) DESC` |
 | Ingredient catalog seeding | `INGREDIENTS` table needs seed data so `ingredient_id` lookups work on pantry add |
 | Preference scoring | `prefScore` in `RecipeScorer` matches `recipe.getCategoryTags()` against `user.getDietaryPreferences()` — `User` model needs a `preferences` field populated from DB |

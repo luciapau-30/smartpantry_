@@ -1,5 +1,6 @@
 package edu.usc.csci201.group12.smartpantry.servlet.member;
 
+import edu.usc.csci201.group12.smartpantry.dao.UserPreferenceDao;
 import edu.usc.csci201.group12.smartpantry.dao.UserStore;
 import edu.usc.csci201.group12.smartpantry.jdbc.JdbcConnectionFactory;
 import edu.usc.csci201.group12.smartpantry.model.Member;
@@ -87,6 +88,11 @@ public final class RecommendRecipesServlet extends AbstractJsonServlet {
                     edu.usc.csci201.group12.smartpantry.json.JsonApiResponse.fail("Failed to load pantry"));
             return;
         }
+
+        // Load preferences so prefScore uses real data
+        try {
+            member.setPreferredCuisines(new UserPreferenceDao().getPreferences(member.getId()));
+        } catch (Exception ignored) {}
 
         List<ScoredRecipe> recommendations = recommender.recommend(member, pantry);
         writeOk(resp, Map.of("recommendations", recommendations));

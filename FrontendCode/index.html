@@ -47,8 +47,18 @@
   </nav>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-    <div id="guestBanner" class="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-      Guest view: log in to save, like, dislike, and comment.
+    <div id="guestBanner" class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-200">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+        <p class="text-sm">Guest view — log in to save, like, and comment. Or try a one-time recipe suggestion below.</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input id="guestIngredientInput" type="text" placeholder="Enter ingredients you have, e.g. tomatoes, garlic, pasta"
+          class="flex-1 rounded-xl bg-amber-900/30 border border-amber-500/40 px-3 py-2 text-sm text-amber-100 placeholder-amber-400/60 outline-none focus:border-amber-400 transition" />
+        <button onclick="runGuestDemo()" class="bg-amber-500 hover:bg-amber-400 text-black font-semibold px-4 py-2 rounded-xl text-sm transition whitespace-nowrap">
+          Get Recipe Ideas
+        </button>
+      </div>
+      <div id="guestDemoResults" class="hidden mt-3 space-y-2"></div>
     </div>
     <section class="grid lg:grid-cols-[1.5fr_1fr] gap-6 items-stretch">
       <div class="rounded-3xl border border-gray-800 bg-gradient-to-br from-gray-900 to-gray-950 p-6 sm:p-8 shadow-2xl">
@@ -478,6 +488,10 @@
               <button class="reaction-btn rounded-2xl border border-gray-800 bg-gray-900 py-3 text-sm hover:border-rose-500/40 transition disabled:cursor-not-allowed disabled:opacity-50" data-action="dislike" data-id="${recipe.id}" ${state.loggedIn ? '' : 'disabled'}>👎 <span>${counts.dislikes}</span></button>
               <button class="reaction-btn rounded-2xl border border-gray-800 bg-gray-900 py-3 text-sm hover:border-purple-500/40 transition disabled:cursor-not-allowed disabled:opacity-50" data-action="save" data-id="${recipe.id}" ${state.loggedIn ? '' : 'disabled'}>${state.savedRecipes.has(recipe.id) ? '★ Saved' : '☆ Save'}</button>
             </div>
+            ${state.loggedIn ? `
+            <button id="makeRecipeBtn" data-id="${recipe.id}" class="w-full rounded-2xl bg-green-700 hover:bg-green-600 text-white py-3 text-sm font-semibold transition">Make This Recipe</button>
+            <div id="makeRecipeResult" class="hidden rounded-2xl border px-4 py-3 text-sm"></div>
+            ` : ''}
             <div class="grid sm:grid-cols-2 gap-3 text-sm">
               <div class="rounded-2xl border border-gray-800 bg-gray-900 p-4">
                 <p class="text-gray-500 text-xs uppercase tracking-wider">Pantry fit</p>
@@ -648,6 +662,42 @@
         });
       });
 
+      const makeBtn = document.getElementById('makeRecipeBtn');
+      if (makeBtn) {
+        makeBtn.addEventListener('click', async () => {
+          const id = makeBtn.dataset.id;
+          const resultEl = document.getElementById('makeRecipeResult');
+          makeBtn.disabled = true;
+          makeBtn.textContent = 'Making…';
+          try {
+            const res = await fetch(`${API}/api/member/recipes/${id}/make`, {
+              method: 'POST', credentials: 'include'
+            });
+            const json = await res.json().catch(() => ({}));
+            if (res.ok) {
+              const used = json.data?.used || [];
+              const missing = json.data?.missing || [];
+              let msg = used.length ? `Used: ${used.join(', ')}.` : 'No pantry items matched.';
+              if (missing.length) msg += ` Missing from pantry: ${missing.join(', ')}.`;
+              resultEl.textContent = msg;
+              resultEl.className = 'rounded-2xl border border-green-500/40 bg-green-900/20 px-4 py-3 text-sm text-green-300';
+              resultEl.classList.remove('hidden');
+            } else {
+              resultEl.textContent = json.error || 'Could not make recipe.';
+              resultEl.className = 'rounded-2xl border border-red-500/40 bg-red-900/20 px-4 py-3 text-sm text-red-300';
+              resultEl.classList.remove('hidden');
+            }
+          } catch (_) {
+            resultEl.textContent = 'Could not reach server.';
+            resultEl.className = 'rounded-2xl border border-red-500/40 bg-red-900/20 px-4 py-3 text-sm text-red-300';
+            resultEl.classList.remove('hidden');
+          } finally {
+            makeBtn.disabled = false;
+            makeBtn.textContent = 'Make This Recipe';
+          }
+        });
+      }
+
       document.querySelectorAll('.comment-form').forEach(form => {
         form.addEventListener('submit', async (e) => {
           e.preventDefault();
@@ -754,6 +804,48 @@
       const mini = e.target.closest('.mini-recipe');
       if (mini) openRecipe(mini.dataset.recipeId);
     });
+
+    async function runGuestDemo() {
+      const input = document.getElementById('guestIngredientInput');
+      const resultsEl = document.getElementById('guestDemoResults');
+      const raw = input?.value.trim();
+      if (!raw) return;
+
+      const ingredients = raw.split(',').map(s => s.trim()).filter(Boolean);
+      resultsEl.innerHTML = '<p class="text-amber-300 text-xs">Finding matches…</p>';
+      resultsEl.classList.remove('hidden');
+
+      try {
+        const res = await fetch(`${API}/api/guest/demo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ingredients })
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          resultsEl.innerHTML = `<p class="text-red-300 text-xs">${json.error || 'Could not fetch suggestions.'}</p>`;
+          return;
+        }
+        const items = json.data || [];
+        if (!items.length) {
+          resultsEl.innerHTML = '<p class="text-amber-300 text-xs">No matching recipes found. Try different ingredients.</p>';
+          return;
+        }
+        resultsEl.innerHTML = `
+          <p class="text-amber-300 text-xs mb-2">Top matches for your ingredients — <button onclick="toggleModal()" class="underline hover:text-amber-200">log in</button> to save &amp; interact.</p>
+          ${items.map(r => `
+            <div class="flex items-center justify-between rounded-xl bg-amber-900/20 border border-amber-500/20 px-3 py-2 gap-3">
+              <div>
+                <p class="text-sm font-semibold text-amber-100">${r.title}</p>
+                <p class="text-xs text-amber-300/70">${r.cuisineType} · ${r.pantryScore}% pantry match · ${r.missing} missing</p>
+              </div>
+            </div>
+          `).join('')}
+        `;
+      } catch (_) {
+        resultsEl.innerHTML = '<p class="text-red-300 text-xs">Could not reach server. Is Tomcat running?</p>';
+      }
+    }
 
     loadRecipes();
   </script>

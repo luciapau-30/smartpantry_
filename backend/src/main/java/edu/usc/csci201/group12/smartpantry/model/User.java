@@ -2,6 +2,8 @@ package edu.usc.csci201.group12.smartpantry.model;
 
 import edu.usc.csci201.group12.smartpantry.security.PasswordHasher;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -13,6 +15,7 @@ public abstract class User {
     private String username;
     private String email;
     private String passwordHash;
+    private List<String> preferredCuisines = new ArrayList<>();
 
     protected User(String id, String username, String email, String passwordHash) {
         this.id = Objects.requireNonNull(id, "id");
@@ -52,6 +55,11 @@ public abstract class User {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = Objects.requireNonNull(passwordHash, "passwordHash");
+    }
+
+    public List<String> getPreferredCuisines() { return preferredCuisines; }
+    public void setPreferredCuisines(List<String> cuisines) {
+        this.preferredCuisines = cuisines != null ? cuisines : new ArrayList<>();
     }
 
     public boolean verifyPassword(String plainPassword, PasswordHasher hasher) {

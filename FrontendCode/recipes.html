@@ -60,6 +60,18 @@
             Log in to see your uploaded recipes.
         </div>
 
+        <!-- Cuisine Preferences -->
+        <div id="prefsSection" class="hidden mb-6 rounded-2xl border border-gray-800 bg-gray-900/70 p-4">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-sm font-semibold text-gray-300 uppercase tracking-wider">Preferred Cuisines</h2>
+                <button onclick="savePreferences()" class="text-xs bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-full transition">Save</button>
+            </div>
+            <div id="cuisineChips" class="flex flex-wrap gap-2">
+                <!-- chips rendered by JS -->
+            </div>
+            <p id="prefsSaved" class="hidden mt-2 text-xs text-green-400">Preferences saved!</p>
+        </div>
+
         <div id="recipesGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
     </main>
 
@@ -234,15 +246,67 @@
             }
         }
 
+        // ── Cuisine Preferences ────────────────────────────────────────
+
+        const CUISINES = ['American','Italian','Mexican','Chinese','Japanese','Indian','Mediterranean','French','Thai','Vietnamese','Other'];
+        let selectedCuisines = new Set();
+
+        function renderCuisineChips() {
+            const container = document.getElementById('cuisineChips');
+            if (!container) return;
+            container.innerHTML = CUISINES.map(c => `
+                <button type="button" onclick="toggleCuisine('${c}')"
+                    id="chip-${c.replace(/\s/g,'-')}"
+                    class="cuisine-chip rounded-full border px-3 py-1 text-sm transition ${selectedCuisines.has(c) ? 'border-purple-500 bg-purple-500/20 text-purple-300' : 'border-gray-700 text-gray-400 hover:border-purple-500/50'}">
+                    ${c}
+                </button>
+            `).join('');
+        }
+
+        function toggleCuisine(c) {
+            if (selectedCuisines.has(c)) selectedCuisines.delete(c);
+            else selectedCuisines.add(c);
+            renderCuisineChips();
+        }
+
+        async function loadPreferences() {
+            try {
+                const res = await fetch(`${API}/api/member/preferences`, { credentials: 'include' });
+                if (!res.ok) return;
+                const json = await res.json();
+                selectedCuisines = new Set(json.data?.cuisines || []);
+                renderCuisineChips();
+            } catch (_) {}
+        }
+
+        async function savePreferences() {
+            const savedEl = document.getElementById('prefsSaved');
+            try {
+                await fetch(`${API}/api/member/preferences`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cuisines: [...selectedCuisines] })
+                });
+                savedEl?.classList.remove('hidden');
+                setTimeout(() => savedEl?.classList.add('hidden'), 2000);
+            } catch (_) {}
+        }
+
         window.onAuthLogin = function() {
             document.getElementById('guestBanner')?.classList.add('hidden');
             document.getElementById('uploadRecipeBtn')?.classList.remove('hidden');
+            document.getElementById('prefsSection')?.classList.remove('hidden');
+            renderCuisineChips();
+            loadPreferences();
             loadMyRecipes();
         };
         window.onAuthLogout = function() {
             document.getElementById('guestBanner')?.classList.remove('hidden');
             document.getElementById('uploadRecipeBtn')?.classList.add('hidden');
+            document.getElementById('prefsSection')?.classList.add('hidden');
             document.getElementById('recipesGrid').innerHTML = '';
+            selectedCuisines = new Set();
         };
 
         // ── Upload Recipe ──────────────────────────────────────────────

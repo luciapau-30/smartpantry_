@@ -84,6 +84,20 @@
             <div id="pantryList" class="mt-6 space-y-4"></div>
         </section>
 
+        <!-- Shopping List -->
+        <section id="shoppingListSection" class="hidden mt-6 rounded-2xl border border-gray-800 bg-gray-900/70 p-5 sm:p-6 shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Shopping List</h2>
+                    <p class="text-sm text-gray-400 mt-1">Ingredients you need to buy to make your saved recipes.</p>
+                </div>
+                <button onclick="loadShoppingList()" class="text-xs text-purple-400 hover:text-purple-300 transition">Refresh</button>
+            </div>
+            <div id="shoppingListContent">
+                <p class="text-gray-500 text-sm">Loading…</p>
+            </div>
+        </section>
+
         <div id="textImportModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
             <div class="w-full max-w-3xl rounded-2xl border border-gray-700 bg-gray-900 shadow-2xl">
                 <div class="flex items-start justify-between gap-4 border-b border-gray-800 px-5 py-4">
@@ -1089,11 +1103,45 @@
             } catch (e) { /* server not running */ }
         }
 
-        window.onAuthLogin = function() { loadPantry(); };
+        async function loadShoppingList() {
+            const section = document.getElementById('shoppingListSection');
+            const content = document.getElementById('shoppingListContent');
+            content.innerHTML = '<p class="text-gray-500 text-sm">Loading…</p>';
+            try {
+                const res = await fetch(`${API}/api/member/shopping-list`, { credentials: 'include' });
+                if (!res.ok) { content.innerHTML = '<p class="text-gray-500 text-sm">Could not load shopping list.</p>'; return; }
+                const json = await res.json();
+                const items = json.data || [];
+                if (!items.length) {
+                    content.innerHTML = '<p class="text-gray-400 text-sm">Nothing to buy — your pantry covers all your saved recipes!</p>';
+                } else {
+                    content.innerHTML = `
+                        <ul class="divide-y divide-gray-800">
+                            ${items.map(i => `
+                                <li class="flex items-center justify-between py-3">
+                                    <span class="text-white text-sm font-medium capitalize">${i.ingredientName}</span>
+                                    <span class="text-gray-400 text-sm">${i.quantity} ${i.unit || ''}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                        <p class="mt-3 text-xs text-gray-500">${items.length} item${items.length !== 1 ? 's' : ''} needed across your saved recipes.</p>
+                    `;
+                }
+            } catch (_) {
+                content.innerHTML = '<p class="text-red-400 text-sm">Could not reach server.</p>';
+            }
+        }
+
+        window.onAuthLogin = function() {
+            loadPantry();
+            document.getElementById('shoppingListSection')?.classList.remove('hidden');
+            loadShoppingList();
+        };
         window.onAuthLogout = function() {
             pantryItems = [];
             renderPantryList();
             document.getElementById('guestBanner')?.classList.remove('hidden');
+            document.getElementById('shoppingListSection')?.classList.add('hidden');
         };
 
         // Close add-item modal on outside click (auth modal outside-click handled by auth.js)

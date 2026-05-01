@@ -89,12 +89,13 @@ public final class RecipeScorer {
      * @return value in [0.0, 1.0]
      */
     public double prefScore(User user, Recipe recipe) {
-        // TODO: replace with real preference lookup once user preferences are modelled
-        // Example implementation:
-        //   Set<String> preferred = user.getPreferredCuisines();
-        //   if (preferred.contains(recipe.getCuisineType().toLowerCase())) return 1.0;
-        //   if (!preferred.isEmpty()) return 0.2;
-        return 0.5;
+        if (user == null) return 0.5;
+        List<String> prefs = user.getPreferredCuisines();
+        if (prefs == null || prefs.isEmpty()) return 0.5;
+        String cuisine = recipe.getCuisineType();
+        if (cuisine == null) return 0.2;
+        boolean match = prefs.stream().anyMatch(p -> p.equalsIgnoreCase(cuisine.trim()));
+        return match ? 1.0 : 0.2;
     }
 
     // ── popularityScore ──────────────────────────────────────────────────────
