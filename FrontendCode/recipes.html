@@ -50,7 +50,10 @@
                 <h1 class="text-4xl font-bold text-white tracking-tight">My Recipes</h1>
                 <p class="mt-1 text-gray-400">Recipes you've uploaded to the community.</p>
             </div>
-            <a href="index.html" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Browse All</a>
+            <div class="flex gap-3">
+                <button id="uploadRecipeBtn" onclick="openUploadModal()" class="hidden bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Upload Recipe</button>
+                <a href="index.html" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Browse All</a>
+            </div>
         </div>
 
         <div id="guestBanner" class="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200 mb-6">
@@ -104,6 +107,91 @@
         </div>
     </div>
 
+    <!-- Upload Recipe Modal -->
+    <div id="uploadModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-800 border border-gray-700 w-full max-w-2xl rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-700">
+                <h2 class="text-xl font-bold text-white">Upload Recipe</h2>
+                <button onclick="closeUploadModal()" class="text-gray-400 hover:text-white transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <form id="uploadRecipeForm" onsubmit="submitUploadRecipe(event)" class="overflow-y-auto px-6 py-4 space-y-5 flex-1">
+                <p id="uploadError" class="hidden text-red-400 text-sm"></p>
+
+                <!-- Title + Cuisine -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Title <span class="text-red-400">*</span></label>
+                        <input id="recipeTitle" type="text" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-purple-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Cuisine <span class="text-red-400">*</span></label>
+                        <select id="recipeCuisine" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-purple-500 transition">
+                            <option value="">Select…</option>
+                            <option>American</option><option>Italian</option><option>Mexican</option>
+                            <option>Chinese</option><option>Japanese</option><option>Indian</option>
+                            <option>Mediterranean</option><option>French</option><option>Thai</option>
+                            <option>Vietnamese</option><option>Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Description</label>
+                    <textarea id="recipeDescription" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-purple-500 transition resize-none"></textarea>
+                </div>
+
+                <!-- Prep / Cook / Servings -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Prep (min)</label>
+                        <input id="recipePrepTime" type="number" min="0" class="w-full bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-purple-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Cook (min)</label>
+                        <input id="recipeCookTime" type="number" min="0" class="w-full bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-purple-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Servings</label>
+                        <input id="recipeServings" type="number" min="1" value="4" class="w-full bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-purple-500 transition">
+                    </div>
+                </div>
+
+                <!-- Public toggle -->
+                <div class="flex items-center gap-3">
+                    <input id="recipeIsPublic" type="checkbox" checked class="w-4 h-4 accent-purple-500">
+                    <label for="recipeIsPublic" class="text-sm text-gray-300">Share with community (public)</label>
+                </div>
+
+                <!-- Ingredients -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-sm font-medium text-gray-400">Ingredients <span class="text-red-400">*</span></label>
+                        <button type="button" onclick="addIngredientRow()" class="text-xs text-purple-400 hover:text-purple-300 transition">+ Add ingredient</button>
+                    </div>
+                    <div id="ingredientRows" class="space-y-2"></div>
+                </div>
+
+                <!-- Instructions -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-sm font-medium text-gray-400">Instructions <span class="text-red-400">*</span></label>
+                        <button type="button" onclick="addInstructionRow()" class="text-xs text-purple-400 hover:text-purple-300 transition">+ Add step</button>
+                    </div>
+                    <div id="instructionRows" class="space-y-2"></div>
+                </div>
+            </form>
+            <div class="px-6 py-4 border-t border-gray-700 flex justify-end gap-3">
+                <button type="button" onclick="closeUploadModal()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Cancel</button>
+                <button type="submit" form="uploadRecipeForm" id="uploadSubmitBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Upload</button>
+            </div>
+        </div>
+    </div>
+
     <script src="auth.js"></script>
     <script>
         const API = 'http://localhost:8080/smartpantry';
@@ -148,12 +236,238 @@
 
         window.onAuthLogin = function() {
             document.getElementById('guestBanner')?.classList.add('hidden');
+            document.getElementById('uploadRecipeBtn')?.classList.remove('hidden');
             loadMyRecipes();
         };
         window.onAuthLogout = function() {
             document.getElementById('guestBanner')?.classList.remove('hidden');
+            document.getElementById('uploadRecipeBtn')?.classList.add('hidden');
             document.getElementById('recipesGrid').innerHTML = '';
         };
+
+        // ── Upload Recipe ──────────────────────────────────────────────
+
+        const UNITS = ['cup','tbsp','tsp','oz','lb','g','kg','ml','piece','clove','slice','can','bunch','whole'];
+        let ingredientCatalog = []; // [{id, name, category, defaultUnit}]
+
+        async function openUploadModal() {
+            document.getElementById('uploadModal').classList.remove('hidden');
+            document.getElementById('uploadError').classList.add('hidden');
+            document.getElementById('uploadRecipeForm').reset();
+            document.getElementById('ingredientRows').innerHTML = '';
+            document.getElementById('instructionRows').innerHTML = '';
+            if (!ingredientCatalog.length) {
+                try {
+                    const res = await fetch(`${API}/api/ingredients`);
+                    if (res.ok) {
+                        const json = await res.json();
+                        ingredientCatalog = json.data || [];
+                    }
+                } catch (_) {}
+            }
+            addIngredientRow();
+            addIngredientRow();
+            addInstructionRow();
+            addInstructionRow();
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').classList.add('hidden');
+        }
+
+        function addIngredientRow() {
+            const container = document.getElementById('ingredientRows');
+            const idx = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 items-center';
+            div.dataset.idx = idx;
+
+            const nameWrap = document.createElement('div');
+            nameWrap.className = 'relative flex-1';
+
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.placeholder = 'Ingredient name';
+            nameInput.autocomplete = 'off';
+            nameInput.className = 'w-full bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 text-white text-sm focus:outline-none focus:border-purple-500 transition ingredient-name-input';
+            nameInput.dataset.ingredientId = '';
+
+            const dropdown = document.createElement('div');
+            dropdown.className = 'absolute left-0 right-0 z-50 mt-1 bg-gray-800 border border-gray-700 rounded-lg max-h-40 overflow-auto hidden text-white text-sm ingredient-dropdown';
+
+            nameInput.addEventListener('input', () => {
+                const q = nameInput.value.trim().toLowerCase();
+                nameInput.dataset.ingredientId = '';
+                if (!q || !ingredientCatalog.length) { dropdown.classList.add('hidden'); return; }
+                const matches = ingredientCatalog.filter(i => i.name.toLowerCase().includes(q)).slice(0, 10);
+                if (!matches.length) { dropdown.classList.add('hidden'); return; }
+                dropdown.innerHTML = matches.map(i =>
+                    `<div class="px-3 py-2 hover:bg-gray-700 cursor-pointer" data-id="${i.id}" data-name="${i.name}">${i.name}</div>`
+                ).join('');
+                dropdown.classList.remove('hidden');
+                dropdown.querySelectorAll('div').forEach(opt => {
+                    opt.addEventListener('mousedown', e => {
+                        e.preventDefault();
+                        nameInput.value = opt.dataset.name;
+                        nameInput.dataset.ingredientId = opt.dataset.id;
+                        dropdown.classList.add('hidden');
+                    });
+                });
+            });
+            nameInput.addEventListener('blur', () => setTimeout(() => dropdown.classList.add('hidden'), 150));
+
+            nameWrap.appendChild(nameInput);
+            nameWrap.appendChild(dropdown);
+
+            const qtyInput = document.createElement('input');
+            qtyInput.type = 'number';
+            qtyInput.min = '0';
+            qtyInput.step = 'any';
+            qtyInput.value = '1';
+            qtyInput.placeholder = 'Qty';
+            qtyInput.className = 'w-16 bg-gray-900 border border-gray-700 rounded-lg py-2 px-2 text-white text-sm focus:outline-none focus:border-purple-500 transition ingredient-qty-input';
+
+            const unitSelect = document.createElement('select');
+            unitSelect.className = 'bg-gray-900 border border-gray-700 rounded-lg py-2 px-2 text-white text-sm focus:outline-none focus:border-purple-500 transition ingredient-unit-select';
+            UNITS.forEach(u => {
+                const opt = document.createElement('option');
+                opt.value = u; opt.textContent = u;
+                unitSelect.appendChild(opt);
+            });
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.textContent = '×';
+            removeBtn.className = 'text-gray-500 hover:text-red-400 text-lg leading-none transition flex-shrink-0';
+            removeBtn.addEventListener('click', () => div.remove());
+
+            div.appendChild(nameWrap);
+            div.appendChild(qtyInput);
+            div.appendChild(unitSelect);
+            div.appendChild(removeBtn);
+            container.appendChild(div);
+        }
+
+        function addInstructionRow() {
+            const container = document.getElementById('instructionRows');
+            const num = container.children.length + 1;
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 items-start';
+
+            const label = document.createElement('span');
+            label.className = 'text-gray-500 text-sm pt-2 w-5 text-right flex-shrink-0';
+            label.textContent = `${num}.`;
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = `Step ${num}`;
+            input.className = 'flex-1 bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 text-white text-sm focus:outline-none focus:border-purple-500 transition instruction-input';
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.textContent = '×';
+            removeBtn.className = 'text-gray-500 hover:text-red-400 text-lg leading-none transition flex-shrink-0 mt-1';
+            removeBtn.addEventListener('click', () => {
+                div.remove();
+                renumberInstructions();
+            });
+
+            div.appendChild(label);
+            div.appendChild(input);
+            div.appendChild(removeBtn);
+            container.appendChild(div);
+        }
+
+        function renumberInstructions() {
+            document.querySelectorAll('#instructionRows > div').forEach((row, i) => {
+                const lbl = row.querySelector('span');
+                const inp = row.querySelector('input');
+                if (lbl) lbl.textContent = `${i + 1}.`;
+                if (inp) inp.placeholder = `Step ${i + 1}`;
+            });
+        }
+
+        async function submitUploadRecipe(e) {
+            e.preventDefault();
+            const errEl = document.getElementById('uploadError');
+            errEl.classList.add('hidden');
+
+            const title = document.getElementById('recipeTitle').value.trim();
+            const cuisineType = document.getElementById('recipeCuisine').value;
+            const description = document.getElementById('recipeDescription').value.trim();
+            const prepTimeMin = parseInt(document.getElementById('recipePrepTime').value) || 0;
+            const cookTimeMin = parseInt(document.getElementById('recipeCookTime').value) || 0;
+            const servings = parseInt(document.getElementById('recipeServings').value) || 1;
+            const isPublic = document.getElementById('recipeIsPublic').checked;
+
+            // Collect ingredients
+            const ingredients = [];
+            for (const row of document.querySelectorAll('#ingredientRows > div')) {
+                const nameInput = row.querySelector('.ingredient-name-input');
+                const qtyInput = row.querySelector('.ingredient-qty-input');
+                const unitSelect = row.querySelector('.ingredient-unit-select');
+                const name = nameInput?.value.trim();
+                if (!name) continue;
+                const ingredientId = nameInput?.dataset.ingredientId;
+                if (!ingredientId) {
+                    errEl.textContent = `"${name}" was not recognised — please pick from the dropdown.`;
+                    errEl.classList.remove('hidden');
+                    return;
+                }
+                ingredients.push({
+                    ingredientId,
+                    quantity: parseFloat(qtyInput?.value) || 1,
+                    unit: unitSelect?.value || 'piece'
+                });
+            }
+            if (!ingredients.length) {
+                errEl.textContent = 'Add at least one ingredient.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            // Collect instructions
+            const instructions = [];
+            for (const inp of document.querySelectorAll('#instructionRows .instruction-input')) {
+                const step = inp.value.trim();
+                if (step) instructions.push(step);
+            }
+            if (!instructions.length) {
+                errEl.textContent = 'Add at least one instruction step.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            const body = { title, cuisineType, description, prepTimeMin, cookTimeMin, servings, isPublic, ingredients, instructions };
+
+            const btn = document.getElementById('uploadSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Uploading…';
+
+            try {
+                const res = await fetch(`${API}/api/member/recipes/upload`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (res.status === 401) { toggleModal(); closeUploadModal(); return; }
+                if (res.ok) {
+                    closeUploadModal();
+                    loadMyRecipes();
+                } else {
+                    const json = await res.json().catch(() => ({}));
+                    errEl.textContent = json.error || 'Upload failed. Please try again.';
+                    errEl.classList.remove('hidden');
+                }
+            } catch (_) {
+                errEl.textContent = 'Could not reach server. Is Tomcat running?';
+                errEl.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Upload';
+            }
+        }
     </script>
 </body>
 </html>

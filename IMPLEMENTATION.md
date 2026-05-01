@@ -199,6 +199,7 @@
 - [x] `AlertWebSocketEndpoint` — `/ws/alerts`; registers userId→Session on login, sends expiry JSON
 - [x] `HttpSessionConfigurator` — passes HTTP session into WebSocket handshake for user identification
 - [x] `auth.js` — shared auth across all pages; login/register/logout modals wired to backend; WebSocket client with auto-reconnect and toast notifications
+- [x] `GET /api/ingredients` — `IngredientListServlet`; returns full ingredient catalog for frontend autocomplete
 
 ### Recommendation Engine
 - [x] Ingredient synonym resolution with modifier stripping
@@ -253,6 +254,7 @@
 | `GET /api/member/recipes/mine` | ✅ Done | List user's uploaded recipes |
 | `GET /api/recipes/trending` | ✅ Done | Trending recipes (last 24 hours) |
 | `GET /api/recipes/top` | ✅ Done | Top recipes (all-time likes) |
+| `GET /api/ingredients` | ✅ Done | List all seeded ingredients (id + name + category + defaultUnit) — used by Upload Recipe form |
 | `PUT /api/member/preferences` | ❌ Not done | Set dietary preferences + allergies |
 | `POST /api/member/recipes/{id}/make` | ❌ Not done | "Make recipe" — deduct ingredients from pantry |
 | `GET /api/member/shopping-list` | ❌ Not done | Generate shopping list from meal plan |
@@ -275,7 +277,7 @@
 | Recipe detail modal/page | ⚠️ Partial — panel opens but shows local normalized data; real ingredients/steps/comments not fetched from `GET /api/recipes/{id}` |
 | "In Your Pantry" section | ✅ Done — fetches `GET /api/member/recipes/recommend` on login |
 | My Recipes page | ✅ Done — fetches `GET /api/member/recipes/mine` on login |
-| Upload Recipe form | ❌ Not done — form exists on `add-item.html`; submit not wired to `POST /api/member/recipes/upload` |
+| Upload Recipe form | ✅ Done — modal on `recipes.html`; ingredient autocomplete via `GET /api/ingredients`; POSTs to `POST /api/member/recipes/upload` |
 | Shopping list page | New page; call `GET /api/member/shopping-list` |
 | Guest demo | Allow unauthenticated user one browse + one recipe generation without saving |
 | Real-time alerts | ✅ Done — WebSocket connects on login, toast shown on expiry alert push |
