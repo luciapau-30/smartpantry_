@@ -205,3 +205,176 @@ ws.onmessage = (e) => {
     }
 };
 ```
+
+---
+
+## Step 6 — Wire frontend pages to live backend APIs
+**Date:** 2026-04-26
+**Commit:** `835fcdf`
+**Who:** Lucia
+
+### What was done
+All four frontend pages updated to call real backend API endpoints instead of using hardcoded demo data.
+
+| Page | What was wired |
+|------|---------------|
+| `index.html` | `GET /api/recipes/trending`, `GET /api/recipes/top`, `GET /api/recipes` on load; `POST /api/member/recipes/{id}/like`, `save` on button click; `POST /api/member/comments`; `GET /api/member/recipes/recommend` on login |
+| `pantry.html` | `GET /api/member/pantry` on login; `DELETE /api/member/pantry/{id}` on remove; `POST /api/member/pantry/add` on form submit |
+| `recipes.html` | `GET /api/member/recipes/mine` on login |
+| All pages | `auth.js` shared module wired: login/register/logout modal; `GET /api/auth/me` on page load to restore session; WebSocket connection on login for expiry alerts |
+
+`auth.js` was created as a shared module included by all pages. It exposes `window.onAuthLogin` / `window.onAuthLogout` callbacks that each page overrides to load its data.
+
+---
+
+## Step 7 — Fix WebSocket endpoint path
+**Date:** 2026-04-26
+**Commit:** `ebb1426`
+**Who:** Lucia
+
+### What was changed
+- `PantryWebSocket` endpoint corrected to `/ws/pantry` (was mismatched between frontend and backend)
+- `auth.js` WebSocket URL updated to `ws://localhost:8080/smartpantry/ws/pantry`
+- Recipe detail panel wired to show real data from `GET /api/recipes/{id}`
+
+---
+
+## Step 8 — Seed INGREDIENTS table on first startup
+**Date:** 2026-04-27
+**Commit:** `c632898`
+**Who:** Lucia
+
+### What was added
+
+| File | Purpose |
+|------|---------|
+| `resources/seed_ingredients.sql` | 71 canonical ingredients with category and default unit |
+| `dao/IngredientDao.seedIfEmpty()` | Reads `seed_ingredients.sql` from classpath, runs it if `INGREDIENTS` table is empty |
+
+`SmartPantryBootstrapListener` updated to call `new IngredientDao().seedIfEmpty()` on startup, so the ingredient catalog is always present without manual SQL setup.
+
+---
+
+## Step 9 — Upload Recipe form on recipes.html
+**Date:** 2026-04-27
+**Commit:** `26dfdf5`
+**Who:** Lucia
+
+### What was added
+
+**Frontend (`recipes.html`):**
+- Upload Recipe button (hidden until login)
+- Full upload modal: title, cuisine dropdown, description, prep/cook time, servings, public toggle
+- Dynamic ingredient rows with autocomplete — fetches `GET /api/ingredients` catalog on modal open, filters as user types, stores `ingredientId` on selection
+- Dynamic numbered instruction rows
+- On submit: POSTs `UploadRecipeRequest` to `POST /api/member/recipes/upload`, reloads recipe grid on success
+
+**Backend (`IngredientListServlet.java`):**
+- New servlet at `GET /api/ingredients`
+- Returns full catalog from `IngredientDao.getAll()`
+- Used by the upload form's autocomplete to resolve ingredient names to IDs
+
+---
+
+## Steps 10–13 — Make Recipe, Shopping List, Guest Demo, Preferences, Synonyms
+**Date:** 2026-04-28
+**Commit:** `353b11f`
+**Who:** Lucia
+
+### Step 10 — Dietary Preferences (F10)
+
+**New files:**
+- `dao/UserPreferenceDao.java` — `ensureTable()`, `getPreferences(userId)`, `setPreferences(userId, cuisines)` (delete + batch insert in a transaction)
+- `servlet/member/PreferencesServlet.java` — `GET /api/member/preferences`, `POST /api/member/preferences`
+
+**Modified files:**
+- `model/User.java` — added `List<String> preferredCuisines` field with getter/setter
+- `recommendation/RecipeScorer.java` — `prefScore()` now returns `1.0` if cuisine matches, `0.2` if prefs exist but no match, `0.5` if no prefs
+- `servlet/member/RecommendRecipesServlet.java` — loads preferences from DB via `UserPreferenceDao` before calling recommender
+- `web/SmartPantryBootstrapListener.java` — calls `new UserPreferenceDao().ensureTable()` on startup
+
+**Frontend (`recipes.html`):**
+- Cuisine preference chips section (hidden until login)
+- `renderCuisineChips()`, `toggleCuisine()`, `loadPreferences()`, `savePreferences()`
+
+### Step 11 — Make Recipe (F11)
+
+**Modified:** `servlet/member/RecipeInteractionServlet.java`
+- Added `case "make"` to the path-dispatch switch
+- `handleMake()`:
+  1. Loads recipe ingredients via `RecipeIngredientDao.getByRecipe()`
+  2. Loads user pantry via `PantryItemDao.getByUser()`
+  3. Matches by `ingredient_id`; sorts pantry items earliest-expiring first
+  4. Deducts quantities: `updateQuantity()` if partial, `deleteItem()` if fully consumed
+  5. Fires `PantryEventBroadcaster.pantryUpdated()`
+  6. Returns `{used: [...], missing: [...]}`
+
+**Frontend (`index.html`):**
+- "Make This Recipe" button added to detail panel (member-only)
+- On click: POSTs to `/api/member/recipes/{id}/make`, shows used/missing result inline
+
+### Step 12 — Shopping List (F12)
+
+**New file:** `servlet/member/ShoppingListServlet.java` — `GET /api/member/shopping-list`
+- Gets saved recipe IDs → loads each recipe's ingredients → subtracts pantry stock by `ingredient_id` → returns sorted list of what's still needed
+
+**Frontend (`pantry.html`):**
+- Shopping list section (hidden until login)
+- `loadShoppingList()` fetches endpoint, renders ingredient + quantity list
+- Wired into `onAuthLogin` / `onAuthLogout`
+
+### Step 13 — Guest Demo (F15)
+
+**New file:** `servlet/GuestDemoServlet.java` — `POST /api/guest/demo`
+- No auth required
+- Accepts `{"ingredients": ["tomatoes", "garlic", ...]}`
+- Resolves names via `IngredientDao.getByName()`
+- Creates temporary `PantryItem` objects (qty=999) and runs the recommender
+- Returns top 5 `ScoredRecipe` results
+
+**Frontend (`index.html`):**
+- Ingredient text input added to guest banner
+- "Get Recipe Ideas" button calls `runGuestDemo()`
+- Results rendered inline below the input, no login required
+
+### Synonyms expanded
+
+`resources/synonyms.json` expanded from 25 → 64 canonical entries, covering all 71 seeded ingredients and common recipe variants (e.g. `sriracha → hot sauce`, `garbanzo beans → chickpeas`, `creme fraiche → sour cream`).
+
+---
+
+## Step 14 — Frontend redesign
+**Date:** 2026-05-01
+**Commit:** `0b0eddd`
+**Who:** Lucia
+
+### What was added
+
+**New file:** `FrontendCode/style.css`
+- Overrides all Tailwind dark utility classes site-wide
+- Design tokens: parchment backgrounds, espresso text, terracotta accent (replaces purple), slate button palette
+- Fonts: Cormorant Garamond (headings/display) + Jost (body) via Google Fonts
+- Pantry buttons mapped to 5-color muted slate palette: `#C8D5D5` → `#A8BCC4` → `#A8A8B4` → `#888098` → `#584E54`
+- Subtle paper-grain texture overlay, warm nav accent bar, custom scrollbars, soft card shadows
+
+**Modified:** `index.html`, `pantry.html`, `recipes.html`
+- Added `<link rel="preconnect">` for Google Fonts
+- Added `<link rel="stylesheet" href="style.css">` after Tailwind CDN
+
+All functional JavaScript left completely untouched.
+
+---
+
+## Step 15 — README
+**Date:** 2026-05-01
+**Commit:** `987b643`
+**Who:** Lucia
+
+### What was added
+
+`README.md` — complete project documentation:
+- Feature list
+- Tech stack table
+- Annotated project structure tree
+- Setup guide (DB → env var → Maven build → Tomcat deploy → open frontend)
+- Full API endpoint reference (public + member-only + WebSocket)

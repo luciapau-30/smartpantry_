@@ -163,12 +163,17 @@
 - [x] Add Item form — submit POSTs to `POST /api/member/pantry/add`
 - [x] My Recipes page — fetches `GET /api/member/recipes/mine` on login
 - [x] Login/register modal wired to backend via `auth.js` (all 4 pages)
-- [x] Tailwind CSS dark theme across all pages
 - [x] Guest banner / restricted-action messaging
 - [x] Like/dislike/save buttons call real API endpoints
 - [x] Comments submit to `POST /api/member/comments`
-- [ ] Recipe detail panel — opens but uses local data; real ingredients/steps/comments not fetched
-- [ ] Upload Recipe form — not wired to backend
+- [x] Recipe detail panel — opens on card click; shows summary, like/dislike/save/make buttons
+- [x] Upload Recipe form — modal on `recipes.html`; ingredient autocomplete via `GET /api/ingredients`; POSTs to `POST /api/member/recipes/upload`
+- [x] Make Recipe button — logged-in members only; POSTs to `/api/member/recipes/{id}/make`; shows used/missing result
+- [x] Guest demo — ingredient input in guest banner; `POST /api/guest/demo`; top 5 results shown inline
+- [x] Shopping list — section in `pantry.html`; loads on login from `GET /api/member/shopping-list`
+- [x] Cuisine preference chips — `recipes.html`; GET/POST `/api/member/preferences`
+- [x] WebSocket toast alerts — connects on login; shows expiry notifications; re-fetches pantry on `PANTRY_UPDATED`
+- [x] Warm editorial redesign — `style.css` design system (Cormorant Garamond + Jost, parchment palette, slate button palette)
 
 ### Backend (Java / Maven / Tomcat)
 - [x] Maven WAR project, Java 17, Jakarta Servlet 6.0
@@ -227,8 +232,11 @@
 - [x] MySQL connector dependency added to `pom.xml`
 - [x] **`mvn clean package -DskipTests` → BUILD SUCCESS**
 
-### Known Gap
-- `Member.addToPantry()`, `uploadRecipe()`, `postComment()` call `JdbcConnectionFactory.openConnection()` directly — they require `PANTRY_DB_URL` to be set even in dev mode. These endpoints will crash without a DB connection.
+### Resources
+- [x] `schema.sql` — full MySQL schema (11 tables including `USER_PREFERENCES`)
+- [x] `seed_ingredients.sql` — 71 canonical ingredients; seeded automatically on first startup via `IngredientDao.seedIfEmpty()`
+- [x] `synonyms.json` — 64 canonical entries; expanded to cover all seeded ingredients plus common recipe variants
+- [x] `README.md` — setup guide, project structure, full API reference
 
 ---
 
@@ -287,12 +295,12 @@
 | Real-time alerts | ✅ Done — WebSocket connects on login, toast shown on expiry alert push |
 
 ### Algorithm / Data Quality
-| Item | What's Needed |
-|------|--------------|
+| Item | Status |
+|------|--------|
 | `synonyms.json` content | ✅ Done — expanded from 25 to 64 canonical entries covering all 71 seeded ingredients plus common variants |
-| Trending score endpoint | Query DB: `SELECT recipe_id, COUNT(*) FROM RECIPE_LIKES WHERE created_at > NOW() - INTERVAL 24 HOUR GROUP BY recipe_id ORDER BY COUNT(*) DESC` |
-| Ingredient catalog seeding | `INGREDIENTS` table needs seed data so `ingredient_id` lookups work on pantry add |
-| Preference scoring | `prefScore` in `RecipeScorer` matches `recipe.getCategoryTags()` against `user.getDietaryPreferences()` — `User` model needs a `preferences` field populated from DB |
+| Trending score endpoint | ✅ Done — `TrendingRecipesServlet` queries `RECIPE_LIKES` for last 24h |
+| Ingredient catalog seeding | ✅ Done — `IngredientDao.seedIfEmpty()` runs `seed_ingredients.sql` on startup |
+| Preference scoring | ✅ Done — `prefScore` in `RecipeScorer` reads `user.getPreferredCuisines()` populated by `UserPreferenceDao` |
 
 ---
 
@@ -303,10 +311,13 @@
 3. ✅ **Merge** `lucia/recommendation-engine` → `dev` (recommendation engine)
 4. ✅ **Add** missing REST endpoints (pantry GET/DELETE, likes, saves, comments GET, trending, top, recipe detail)
 5. ✅ **Add** background expiry thread + WebSocket endpoint
-6. ⚠️ **Wire** each frontend page to the real API — data loading done; recipe detail panel still uses local object (no real ingredients/steps/comments from `GET /api/recipes/{id}`)
+6. ✅ **Wire** each frontend page to the real API — all pages fetch live data; like/save/comment/make all call real endpoints
 7. ✅ **Implement** login/register modal flow end-to-end (`auth.js` + tabbed modal on all 4 pages)
-8. ❌ **Seed** `INGREDIENTS` table and populate `synonyms.json`
-9. ❌ **Test** with ≥ 8 concurrent users; verify < 5s recommendation load time
+8. ✅ **Seed** `INGREDIENTS` table (`seed_ingredients.sql`, 71 entries) and populate `synonyms.json` (64 entries)
+9. ✅ **Add** Upload Recipe form, Make Recipe, Shopping List, Guest Demo, Dietary Preferences (Steps 9–13)
+10. ✅ **Frontend redesign** — warm beige editorial aesthetic (`style.css`), Cormorant Garamond + Jost fonts, slate button palette
+11. ✅ **README** — setup guide, project structure, full API reference
+12. ⬜ **Test** with ≥ 8 concurrent users; verify < 5s recommendation load time (requires live Tomcat + MySQL)
 
 ---
 
