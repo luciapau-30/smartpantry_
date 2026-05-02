@@ -1,0 +1,457 @@
+/* =============================================================
+   SmartPantry — Warm Editorial Design System
+   Cormorant Garamond (display) + Jost (body)
+   Palette: parchment · espresso · terracotta · sage
+   ============================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap');
+
+/* ───── Design tokens ───── */
+:root {
+  --parchment:    #F5F0E8;
+  --parchment-dk: #EDE7D9;
+  --parchment-xdk:#E3D9C8;
+  --border:       #D4C8B4;
+  --border-dk:    #BFB09A;
+  --espresso:     #2C1F0E;
+  --brown:        #7A5C3C;
+  --caramel:      #9E7948;
+  --terracotta:   #7C4A2D;
+  --terra-hover:  #5E3521;
+  --terra-light:  rgba(124,74,45,0.08);
+  --terra-border: rgba(124,74,45,0.35);
+  --sage:         #506B42;
+  --sage-hover:   #3A4E30;
+  --amber-warm:   #B8751E;
+  --ink-muted:    #5A4535;
+
+  /* ── Pantry button palette (from user swatch) ── */
+  --slate-1:      #C8D5D5;   /* dusty sage mint  */
+  --slate-1-h:    #B2C0C0;
+  --slate-2:      #A8BCC4;   /* steel blue-grey  */
+  --slate-2-h:    #8AAAB2;
+  --slate-3:      #A8A8B4;   /* lavender grey    */
+  --slate-3-h:    #8E8E9C;
+  --slate-4:      #888098;   /* dusty mauve      */
+  --slate-4-h:    #706880;
+  --slate-5:      #584E54;   /* dark plum        */
+  --slate-5-h:    #403840;
+}
+
+/* ───── Base reset ───── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: 'Jost', 'Trebuchet MS', sans-serif !important;
+  font-weight: 400;
+  line-height: 1.6;
+  background-color: var(--parchment) !important;
+  color: var(--espresso) !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ───── Heading typography ───── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif !important;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--espresso) !important;
+}
+
+/* Tailwind utility heading classes → serif */
+.text-4xl, .text-5xl, .text-3xl, .text-2xl {
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+}
+.font-black { font-weight: 700 !important; }
+.font-bold  { font-weight: 600 !important; }
+
+/* Brand name — small caps feel */
+.font-bold.text-2xl {
+  font-family: 'Cormorant Garamond', Georgia, serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 1.15rem !important;
+}
+
+/* Uppercase label traces (tracking-[0.2em]) */
+[class*="tracking-"] {
+  font-family: 'Jost', sans-serif !important;
+  font-weight: 500 !important;
+}
+
+/* ───── Background overrides ───── */
+.bg-gray-950                { background-color: var(--parchment)     !important; }
+.bg-gray-900                { background-color: var(--parchment-dk)  !important; }
+.bg-gray-800                { background-color: var(--parchment-xdk) !important; }
+.bg-gray-700                { background-color: var(--border)        !important; }
+.bg-gray-600                { background-color: var(--border-dk)     !important; }
+.bg-gray-900\/70            { background-color: rgba(237,231,217,0.85) !important; }
+.bg-gray-900\/95            { background-color: rgba(237,231,217,0.97) !important; }
+.from-gray-900              { --tw-gradient-from: var(--parchment-dk) !important; }
+.to-gray-950                { --tw-gradient-to:   var(--parchment)   !important; }
+.bg-gradient-to-br          { background: linear-gradient(135deg, var(--parchment-dk), var(--parchment)) !important; }
+
+/* ───── Text overrides ───── */
+.text-white   { color: var(--espresso)  !important; }
+.text-gray-100{ color: var(--espresso)  !important; }
+.text-gray-200{ color: var(--espresso)  !important; }
+.text-gray-300{ color: var(--brown)     !important; }
+.text-gray-400{ color: var(--brown)     !important; }
+.text-gray-500{ color: var(--caramel)   !important; }
+.hover\:text-white:hover { color: var(--espresso) !important; }
+
+/* ───── Border overrides ───── */
+.border-gray-800 { border-color: var(--border)    !important; }
+.border-gray-700 { border-color: var(--border)    !important; }
+.border-gray-600 { border-color: var(--border-dk) !important; }
+.hover\:border-gray-600:hover { border-color: var(--terracotta) !important; }
+.hover\:border-gray-500:hover { border-color: var(--terracotta) !important; }
+
+/* ───── Purple → Terracotta ───── */
+.text-purple-500, .text-purple-400, .text-purple-300 { color: var(--terracotta) !important; }
+.bg-purple-600, .bg-purple-500  { background-color: var(--terracotta)  !important; }
+.hover\:bg-purple-700:hover     { background-color: var(--terra-hover) !important; }
+.hover\:bg-purple-600:hover     { background-color: var(--terra-hover) !important; }
+.border-purple-500              { border-color: var(--terracotta)       !important; }
+.border-b-2.border-purple-500  { border-bottom-color: var(--terracotta) !important; }
+.border-purple-500\/40          { border-color: var(--terra-border)     !important; }
+.bg-purple-500\/10              { background-color: var(--terra-light)  !important; }
+.text-purple-300.bg-purple-500\/10 { color: var(--terracotta) !important; }
+.hover\:text-purple-400:hover   { color: var(--terracotta)  !important; }
+.hover\:text-purple-300:hover   { color: var(--terracotta)  !important; }
+.hover\:border-purple-500:hover { border-color: var(--terracotta) !important; }
+
+/* ───── Green → Slate-2 (Add Item / Make Recipe) ───── */
+.bg-green-600               { background-color: var(--slate-2)   !important; color: var(--espresso) !important; }
+.hover\:bg-green-700:hover  { background-color: var(--slate-2-h) !important; }
+.bg-green-700               { background-color: var(--slate-2)   !important; color: var(--espresso) !important; }
+.hover\:bg-green-600:hover  { background-color: var(--slate-2-h) !important; }
+.text-green-400, .text-green-600 { color: var(--sage) !important; }
+.text-green-500             { color: var(--sage) !important; }
+
+/* ───── Cyan → Slate-3 (Import CSV) ───── */
+.bg-cyan-600               { background-color: var(--slate-3)   !important; color: var(--espresso) !important; }
+.hover\:bg-cyan-700:hover  { background-color: var(--slate-3-h) !important; }
+
+/* ───── Sky → Slate-4 (Import with Text / Preview Import) ───── */
+.bg-sky-600                { background-color: var(--slate-4) !important; color: white !important; }
+.hover\:bg-sky-700:hover   { background-color: var(--slate-4-h) !important; }
+
+/* ───── Amber solid buttons → Slate-1 (Apply Import) ───── */
+.bg-amber-500              { background-color: var(--slate-1)   !important; color: var(--espresso) !important; }
+.hover\:bg-amber-600:hover { background-color: var(--slate-1-h) !important; }
+.hover\:bg-amber-400:hover { background-color: var(--slate-1)   !important; }
+
+/* ───── Amber tints (guest banner, warnings — keep warm) ───── */
+.border-amber-500\/30      { border-color: rgba(184,117,30,0.28) !important; }
+.bg-amber-500\/10          { background-color: rgba(184,117,30,0.07) !important; }
+.text-amber-200            { color: var(--amber-warm)  !important; }
+.text-amber-100            { color: var(--ink-muted)   !important; }
+.bg-amber-900\/30          { background-color: rgba(184,117,30,0.10) !important; }
+.text-amber-400\/60        { color: rgba(184,117,30,0.55) !important; }
+.border-amber-500\/40      { border-color: rgba(184,117,30,0.38) !important; }
+.border-amber-400          { border-color: var(--amber-warm) !important; }
+.focus\:border-amber-400:focus { border-color: var(--amber-warm) !important; }
+.text-amber-400            { color: var(--amber-warm) !important; }
+
+/* ───── Red actions → Slate-5 dark plum (Remove button) ───── */
+.text-red-400, .text-red-500   { color: #A03030 !important; }
+.bg-red-500                    { background-color: var(--slate-5)   !important; color: white !important; }
+.bg-red-600                    { background-color: var(--slate-5)   !important; color: white !important; }
+.hover\:bg-red-600:hover       { background-color: var(--slate-5-h) !important; }
+.hover\:bg-red-700:hover       { background-color: var(--slate-5-h) !important; }
+.border-red-500                { border-color: var(--slate-5) !important; }
+.bg-red-500\/10                { background-color: rgba(88,78,84,0.08) !important; }
+
+/* ───── Navigation ───── */
+nav {
+  background-color: var(--parchment-xdk) !important;
+  border-bottom-color: var(--border-dk)  !important;
+}
+nav .shadow-md { box-shadow: 0 1px 8px rgba(44,31,14,0.08) !important; }
+
+/* ───── Modals ───── */
+.bg-black\/70  { background-color: rgba(44,31,14,0.60) !important; }
+.bg-black\/60  { background-color: rgba(44,31,14,0.50) !important; }
+.bg-black\/50  { background-color: rgba(44,31,14,0.40) !important; }
+
+/* ───── Cards & panels ───── */
+.rounded-3xl, .rounded-2xl, .rounded-xl {
+  box-shadow: 0 2px 16px rgba(44,31,14,0.06), 0 1px 4px rgba(44,31,14,0.04);
+}
+.shadow-2xl {
+  box-shadow: 0 4px 40px rgba(44,31,14,0.10), 0 2px 8px rgba(44,31,14,0.05) !important;
+}
+.shadow-xl  {
+  box-shadow: 0 2px 20px rgba(44,31,14,0.08), 0 1px 4px rgba(44,31,14,0.04) !important;
+}
+.shadow-lg  {
+  box-shadow: 0 1px 10px rgba(44,31,14,0.08) !important;
+}
+.shadow     {
+  box-shadow: 0 1px 4px rgba(44,31,14,0.08) !important;
+}
+
+/* ───── Glass effect ───── */
+.glass {
+  background: rgba(237,231,217,0.90) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* ───── Inputs / textarea / select ───── */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="date"],
+textarea,
+select {
+  background-color: var(--parchment)  !important;
+  color: var(--espresso)              !important;
+  border-color: var(--border-dk)      !important;
+}
+input::placeholder,
+textarea::placeholder { color: var(--caramel) !important; opacity: 0.65; }
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--terracotta) !important;
+  box-shadow: 0 0 0 2px rgba(124,74,45,0.12);
+}
+
+/* ───── Buttons ───── */
+button, [role="button"] {
+  font-family: 'Jost', sans-serif !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em;
+}
+
+/* ───── Recipe cards (dynamically generated) ───── */
+.recipe-card,
+[class*="recipe-card"] {
+  background-color: var(--parchment-dk) !important;
+  border-color: var(--border) !important;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.recipe-card:hover { transform: translateY(-2px); }
+
+/* Pantry table */
+tr:nth-child(even) td { background-color: rgba(237,231,217,0.6) !important; }
+tr:hover td { background-color: rgba(212,200,180,0.4) !important; }
+th { color: var(--brown) !important; }
+td { color: var(--espresso) !important; }
+
+/* ───── Scrollbar ───── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--parchment-dk); }
+::-webkit-scrollbar-thumb { background: var(--border-dk); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--brown); }
+
+/* ───── Tag / filter chips ───── */
+.filter-chip {
+  color: var(--brown) !important;
+  border-color: var(--border-dk) !important;
+  transition: all 0.15s ease;
+}
+.filter-chip:hover {
+  border-color: var(--terracotta) !important;
+  color: var(--terracotta) !important;
+  background-color: var(--terra-light) !important;
+}
+.filter-chip.active,
+.filter-chip[data-active="true"] {
+  background-color: var(--terracotta) !important;
+  border-color: var(--terracotta)    !important;
+  color: white !important;
+}
+
+/* ───── Cuisine preference chips ───── */
+.cuisine-chip {
+  font-family: 'Jost', sans-serif !important;
+  font-weight: 400;
+}
+.cuisine-chip.selected {
+  background-color: var(--terracotta) !important;
+  border-color: var(--terracotta)     !important;
+  color: white !important;
+}
+
+/* ───── Expiry badges ───── */
+.expiry-warn  { color: var(--amber-warm) !important; }
+.expiry-ok    { color: var(--sage)       !important; }
+.expiry-crit  { color: #A03030           !important; }
+
+/* ───── Decorative detail: thin top accent bar on nav ───── */
+nav::before {
+  content: '';
+  display: block;
+  height: 2px;
+  background: linear-gradient(90deg, var(--terracotta) 0%, var(--amber-warm) 60%, transparent 100%);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+nav { position: relative; }
+
+/* ───── Page-level subtle grain texture ───── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  opacity: 0.4;
+}
+main, nav, footer { position: relative; z-index: 1; }
+
+/* ───── Misc utility overrides ───── */
+.bg-transparent { background-color: transparent !important; }
+.opacity-0      { opacity: 0 !important; }
+.opacity-100    { opacity: 1 !important; }
+.divide-gray-800 > * + * { border-top-color: var(--border) !important; }
+
+/* Inline bg set by JS (score bar fills) */
+[style*="background-color: rgb(124"] { background-color: var(--terracotta) !important; }
+
+/* ───── Pantry import review panel ───── */
+.border-amber-500\/40.bg-amber-900\/10 {
+  background-color: rgba(184,117,30,0.05) !important;
+}
+
+/* ───── "Live demo" badge ───── */
+.text-purple-300 { color: var(--terracotta) !important; }
+
+/* ───── Selected card ring ───── */
+.ring-purple-500\/70 { --tw-ring-color: rgba(124,74,45,0.60) !important; }
+.ring-2 { box-shadow: 0 0 0 2px var(--tw-ring-color, rgba(124,74,45,0.60)) !important; }
+
+/* ───── Checkbox / input accent ───── */
+.accent-purple-500 { accent-color: var(--terracotta) !important; }
+
+/* ───── input focus:border-purple-500 ───── */
+.focus\:border-purple-500:focus { border-color: var(--terracotta) !important; }
+
+/* ───── border-dashed (empty detail panel) ───── */
+.border-dashed.border-gray-700 { border-color: var(--border-dk) !important; }
+
+/* ───── Emerald / yellow / cyan badges (trending / top / pantry) ───── */
+.bg-emerald-500\/10    { background-color: rgba(80,107,66,0.10)  !important; }
+.text-emerald-300      { color: var(--sage)                      !important; }
+.border-emerald-500\/30{ border-color: rgba(80,107,66,0.30)      !important; }
+.bg-yellow-500\/10     { background-color: rgba(184,117,30,0.09) !important; }
+.text-yellow-300       { color: var(--amber-warm)                !important; }
+.border-yellow-500\/30 { border-color: rgba(184,117,30,0.28)     !important; }
+.bg-cyan-500\/10       { background-color: rgba(74,123,120,0.10) !important; }
+.text-cyan-300         { color: #4A7B78                          !important; }
+.border-cyan-500\/30   { border-color: rgba(74,123,120,0.28)     !important; }
+
+/* ───── Pantry preview pill tags (JS-generated) ───── */
+.rounded-full.border.border-gray-700.bg-gray-900 {
+  background-color: var(--parchment-xdk) !important;
+  border-color: var(--border-dk) !important;
+  color: var(--brown) !important;
+}
+
+/* ───── Mini recipe button (sidebar lists) ───── */
+.mini-recipe {
+  background-color: var(--parchment-dk) !important;
+  border-color: var(--border) !important;
+  color: var(--espresso) !important;
+}
+.mini-recipe:hover {
+  border-color: var(--terracotta) !important;
+  background-color: var(--parchment-xdk) !important;
+}
+
+/* ───── hover:bg-gray-800 / hover:bg-gray-900 ───── */
+.hover\:bg-gray-800:hover { background-color: var(--parchment-xdk) !important; }
+.hover\:bg-gray-900:hover { background-color: var(--parchment-dk)  !important; }
+
+/* ───── Make Recipe button already covered by bg-green-700 override above ───── */
+
+/* ───── Reaction buttons (like/dislike/save) ───── */
+.hover\:border-emerald-500\/40:hover { border-color: rgba(80,107,66,0.40)  !important; }
+.hover\:border-rose-500\/40:hover    { border-color: rgba(160,48,48,0.40)  !important; }
+.hover\:border-purple-500\/40:hover  { border-color: var(--terra-border)    !important; }
+
+/* ───── Saved recipe badge ───── */
+.bg-purple-500\/15  { background-color: rgba(124,74,45,0.10) !important; }
+.border-purple-500\/30 { border-color: rgba(124,74,45,0.30) !important; }
+
+/* ───── Pantry item cards (JS-rendered with bg-gray-800/80) ───── */
+.bg-gray-800\/80 { background-color: rgba(227,217,200,0.88) !important; }
+
+/* ───── Edit button (bg-gray-600 → Slate-3) ───── */
+button.bg-gray-600, [type="button"].bg-gray-600 {
+  background-color: var(--slate-3)   !important;
+  color: var(--espresso)             !important;
+}
+button.hover\:bg-gray-500:hover, [type="button"].hover\:bg-gray-500:hover {
+  background-color: var(--slate-3-h) !important;
+}
+.bg-gray-500               { background-color: var(--border-dk)  !important; }
+.hover\:bg-gray-500:hover  { background-color: var(--border)     !important; }
+
+/* ───── Cancel buttons (bg-gray-700 → Slate-1) ───── */
+button.bg-gray-700, [type="button"].bg-gray-700 {
+  background-color: var(--slate-1)   !important;
+  color: var(--espresso)             !important;
+}
+button.hover\:bg-gray-600:hover, [type="button"].hover\:bg-gray-600:hover {
+  background-color: var(--slate-1-h) !important;
+}
+
+/* ───── Sky accent (text import modal) ───── */
+.accent-sky-500            { accent-color: #556E8A !important; }
+.focus\:border-sky-500:focus { border-color: #556E8A !important; }
+
+/* ───── Suggestions autocomplete dropdown ───── */
+#suggestions {
+  background-color: var(--parchment-dk) !important;
+  border-color: var(--border-dk)        !important;
+  color: var(--espresso)                !important;
+}
+#suggestions > * {
+  color: var(--espresso) !important;
+}
+#suggestions > *:hover {
+  background-color: var(--parchment-xdk) !important;
+}
+
+/* ───── Import review rows ───── */
+.rounded.border-gray-600.bg-gray-800,
+.border-gray-600.bg-gray-800 {
+  background-color: var(--parchment-xdk) !important;
+  border-color: var(--border-dk)         !important;
+}
+
+/* ───── hover:text-purple-400 link style ───── */
+.hover\:text-purple-400:hover { color: var(--terracotta) !important; }
+.text-purple-400 { color: var(--terracotta) !important; }
+
+/* ───── Ingredient autocomplete dropdown (upload modal) ───── */
+.ingredient-dropdown {
+  background-color: var(--parchment-dk) !important;
+  border-color: var(--border-dk)        !important;
+  color: var(--espresso)                !important;
+}
+.ingredient-dropdown > div:hover,
+.hover\:bg-gray-700:hover {
+  background-color: var(--parchment-xdk) !important;
+}
+
+/* ───── Cuisine chip selected state (bg-purple-500/20) ───── */
+.bg-purple-500\/20 { background-color: rgba(124,74,45,0.14) !important; }
+.hover\:border-purple-500\/50:hover { border-color: rgba(124,74,45,0.50) !important; }
+
+/* ───── Recipe cards (recipes.html my-recipes grid) ───── */
+article.rounded-3xl.border.border-gray-800.bg-gray-950 {
+  background-color: var(--parchment-dk) !important;
+  border-color: var(--border) !important;
+}
+
+/* ───── Remove × button in ingredient rows ───── */
+.hover\:text-red-400:hover { color: #A03030 !important; }

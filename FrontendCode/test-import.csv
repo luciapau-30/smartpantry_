@@ -1,0 +1,11 @@
+item,quantity,unit,expiration
+Milk,1,gallon,2026-04-12
+Eggs,12,count,03/29/2026
+Banana,2,count,
+Rice,1,bag,2026-12-01
+Tomatoes,6,count,05/02/2026
+Olive Oil,1,liter,2026-10-15
+Butter,2,box,2026-07-01
+dummyitem,2,box
+Milk,-12,cup,03/09/2026
+Cage-Free Egg,3,count
