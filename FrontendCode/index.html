@@ -5,12 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Smart Pantry - Explore Recipes</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="style.css">
   <style>
     [data-hidden="true"] { display: none !important; }
-    .glass {
-      background: rgba(17, 24, 39, 0.85);
-      backdrop-filter: blur(10px);
-    }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
@@ -32,17 +31,33 @@
 
         <div class="hidden sm:flex sm:items-center sm:gap-3">
           <span id="sessionLabel" class="text-xs text-gray-400 hidden md:inline">Guest view</span>
-          <button id="loginBtn" class="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition shadow-lg">
+          <button id="loginBtn" onclick="toggleModal()" class="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition shadow-lg">
             Log In
           </button>
+          <div id="userNav" class="hidden flex items-center space-x-3">
+            <span id="usernameDisplay" class="text-gray-300 text-sm font-medium"></span>
+            <button onclick="logout()" class="bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-600 transition">
+              Log Out
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </nav>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-    <div id="guestBanner" class="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-      Guest view: log in to save, like, dislike, and comment.
+    <div id="guestBanner" class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-200">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+        <p class="text-sm">Guest view — log in to save, like, and comment. Or try a one-time recipe suggestion below.</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input id="guestIngredientInput" type="text" placeholder="Enter ingredients you have, e.g. tomatoes, garlic, pasta"
+          class="flex-1 rounded-xl bg-amber-900/30 border border-amber-500/40 px-3 py-2 text-sm text-amber-100 placeholder-amber-400/60 outline-none focus:border-amber-400 transition" />
+        <button onclick="runGuestDemo()" class="bg-amber-500 hover:bg-amber-400 text-black font-semibold px-4 py-2 rounded-xl text-sm transition whitespace-nowrap">
+          Get Recipe Ideas
+        </button>
+      </div>
+      <div id="guestDemoResults" class="hidden mt-3 space-y-2"></div>
     </div>
     <section class="grid lg:grid-cols-[1.5fr_1fr] gap-6 items-stretch">
       <div class="rounded-3xl border border-gray-800 bg-gradient-to-br from-gray-900 to-gray-950 p-6 sm:p-8 shadow-2xl">
@@ -177,173 +192,125 @@
     </section>
   </main>
 
-  <div id="loginModal" data-hidden="true" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <!-- Auth modal (login + register tabs) -->
+  <div id="authModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-gray-800 border border-gray-700 w-full max-w-md rounded-2xl shadow-2xl p-8 relative">
-      <button id="closeLoginBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white transition" aria-label="Close login modal">
+      <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
         </svg>
       </button>
-
-      <h2 class="text-3xl font-bold text-white mb-2 text-center">Login</h2>
-      <p class="text-center text-gray-400 text-sm mb-6">Demo login for guest/member view states.</p>
-
-      <form id="loginForm" class="space-y-5">
+      <div class="flex border-b border-gray-700 mb-6">
+        <button id="tabLogin" onclick="showLoginTab()" class="flex-1 py-2 text-sm font-medium border-b-2 border-purple-500 text-white transition">Sign In</button>
+        <button id="tabRegister" onclick="showRegisterTab()" class="flex-1 py-2 text-sm font-medium border-b-2 border-transparent text-gray-400 transition">Create Account</button>
+      </div>
+      <p id="authError" class="hidden text-red-400 text-sm mb-4"></p>
+      <form id="loginForm" onsubmit="submitLogin(event)" class="space-y-5">
         <div>
-          <label class="block text-sm font-medium text-gray-400 mb-2">Email Address</label>
-          <input id="loginEmail" type="email" required placeholder="ajprado@usc.edu" class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+          <label class="block text-sm font-medium text-gray-400 mb-2">Email or Username</label>
+          <input id="loginIdentifier" type="text" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
         </div>
-
         <div>
-          <div class="flex justify-between mb-2">
-            <label class="text-sm font-medium text-gray-400">Password</label>
-            <a href="#" class="text-xs text-purple-400 hover:text-purple-300">Forgot Password?</a>
-          </div>
-          <input id="loginPassword" type="password" required placeholder="••••••••" class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+          <label class="block text-sm font-medium text-gray-400 mb-2">Password</label>
+          <input id="loginPassword" type="password" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
         </div>
-
-        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition shadow-lg">
-          Sign In
-        </button>
-
-        <p class="text-center text-gray-400 text-sm">
-          Don't have an account? <a href="#" class="text-purple-400 hover:underline">Sign up</a>
-        </p>
+        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition shadow-lg">Sign In</button>
+        <p class="text-center text-gray-400 text-sm">No account? <button type="button" onclick="showRegisterTab()" class="text-purple-400 hover:underline">Create one</button></p>
+      </form>
+      <form id="registerForm" onsubmit="submitRegister(event)" class="hidden space-y-5">
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">Username</label>
+          <input id="regUsername" type="text" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+          <input id="regEmail" type="email" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-400 mb-2">Password</label>
+          <input id="regPassword" type="password" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+        </div>
+        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition shadow-lg">Create Account</button>
+        <p class="text-center text-gray-400 text-sm">Already have one? <button type="button" onclick="showLoginTab()" class="text-purple-400 hover:underline">Sign in</button></p>
       </form>
     </div>
   </div>
 
+  <script src="auth.js"></script>
   <script>
-    const pantryItems = ["tomatoes", "eggs", "rice", "chicken", "spinach", "garlic", "bread", "milk"];
+    const API = 'http://localhost:8080/smartpantry';
+    const COLORS = ['from-pink-500 to-orange-500','from-emerald-500 to-teal-500','from-cyan-500 to-blue-500','from-violet-500 to-fuchsia-500','from-rose-500 to-red-500','from-indigo-500 to-sky-500'];
 
-    const recipes = [
-      {
-        id: 1,
-        title: "Sunset Pasta Primavera",
-        author: "Maya Chen",
-        cuisine: "Italian",
-        tags: ["Vegetarian", "Under 30 min", "Gluten Free"],
-        ingredients: ["tomatoes", "garlic", "spinach", "olive oil", "pasta"],
-        likes: 184,
-        dislikes: 9,
-        saves: 72,
-        comments: 26,
-        activity: 92,
-        rating: 4.8,
-        time: 25,
-        summary: "A bright weeknight pasta loaded with vegetables and a citrus finish.",
-        color: "from-pink-500 to-orange-500",
-        commentsThread: [
-          { user: "Jeffrey", text: "Made this with extra spinach and it was amazing.", replies: [{ user: "Maya Chen", text: "Love that variation!" }] },
-          { user: "Aria", text: "Quick, simple, and very filling.", replies: [] }
-        ]
-      },
-      {
-        id: 2,
-        title: "High-Protein Breakfast Wrap",
-        author: "David K.",
-        cuisine: "American",
-        tags: ["High Protein", "Under 30 min"],
-        ingredients: ["eggs", "spinach", "cheese", "tortilla"],
-        likes: 210,
-        dislikes: 12,
-        saves: 90,
-        comments: 18,
-        activity: 88,
-        rating: 4.9,
-        time: 12,
-        summary: "A fast breakfast wrap that works for busy mornings and meal prep.",
-        color: "from-emerald-500 to-teal-500",
-        commentsThread: [
-          { user: "Lucia", text: "Perfect after the gym.", replies: [{ user: "David K.", text: "Exactly the goal!" }] },
-          { user: "Maya", text: "I swapped cheddar for feta and it was great.", replies: [] }
-        ]
-      },
-      {
-        id: 3,
-        title: "Crispy Garlic Chicken Bowl",
-        author: "Nina Patel",
-        cuisine: "Fusion",
-        tags: ["High Protein", "Peanut Allergy"],
-        ingredients: ["chicken", "rice", "garlic", "broccoli"],
-        likes: 260,
-        dislikes: 8,
-        saves: 111,
-        comments: 41,
-        activity: 97,
-        rating: 4.9,
-        time: 28,
-        summary: "A savory bowl built for pantry ingredients and quick assembly.",
-        color: "from-cyan-500 to-blue-500",
-        commentsThread: [
-          { user: "Alijah", text: "This one fits the pantry-matching idea really well.", replies: [{ user: "Nina Patel", text: "That was the intention!" }] },
-          { user: "Zoe", text: "The garlic sauce is the best part.", replies: [] }
-        ]
-      },
-      {
-        id: 4,
-        title: "Gluten-Free Berry Yogurt Parfait",
-        author: "Sofia Rivera",
-        cuisine: "Breakfast",
-        tags: ["Gluten Free", "Vegetarian"],
-        ingredients: ["yogurt", "berries", "oats", "honey"],
-        likes: 148,
-        dislikes: 4,
-        saves: 64,
-        comments: 13,
-        activity: 77,
-        rating: 4.7,
-        time: 8,
-        summary: "A light no-cook option that looks great and takes minutes to make.",
-        color: "from-violet-500 to-fuchsia-500",
-        commentsThread: [
-          { user: "Keilani", text: "Great for meal prep jars.", replies: [] },
-          { user: "Sam", text: "I added chia seeds and it got even better.", replies: [{ user: "Sofia Rivera", text: "That sounds perfect." }] }
-        ]
-      },
-      {
-        id: 5,
-        title: "Creamy Tomato Soup",
-        author: "Jordan Lee",
-        cuisine: "Comfort Food",
-        tags: ["Vegetarian", "Under 30 min"],
-        ingredients: ["tomatoes", "garlic", "milk", "bread"],
-        likes: 172,
-        dislikes: 6,
-        saves: 85,
-        comments: 21,
-        activity: 81,
-        rating: 4.8,
-        time: 22,
-        summary: "A cozy soup that pairs with grilled cheese or toasted bread.",
-        color: "from-rose-500 to-red-500",
-        commentsThread: [
-          { user: "Alijah", text: "Could totally use this for 'In Your Pantry'.", replies: [] },
-          { user: "Jordan Lee", text: "That is the exact use case.", replies: [] }
-        ]
-      },
-      {
-        id: 6,
-        title: "Street-Style Veggie Rice",
-        author: "Chris Wu",
-        cuisine: "Asian",
-        tags: ["Peanut Allergy", "High Protein"],
-        ingredients: ["rice", "eggs", "spinach", "garlic"],
-        likes: 196,
-        dislikes: 11,
-        saves: 78,
-        comments: 24,
-        activity: 89,
-        rating: 4.7,
-        time: 19,
-        summary: "A flexible bowl that is easy to customize with whatever is in the fridge.",
-        color: "from-indigo-500 to-sky-500",
-        commentsThread: [
-          { user: "Avery", text: "This is a great base recipe.", replies: [{ user: "Chris Wu", text: "Exactly, change it as needed." }] },
-          { user: "Maria", text: "Added chili crisp instead of soy sauce.", replies: [] }
-        ]
-      }
-    ];
+    let pantryItems = [];
+    let recipes = [];
+    let trendingRecipes = [];
+    let topRecipes = [];
+
+    // Normalize an API recipe row into the shape the render functions expect.
+    function normalizeRecipe(r, idx) {
+      const tags = r.categoryTags ? r.categoryTags.split(',').map(t => t.trim()).filter(Boolean) : (r.tags || []);
+      return {
+        id: r.id,
+        title: r.title || r.name || 'Untitled',
+        author: r.authorName || r.author || 'Community',
+        cuisine: r.cuisineType || r.cuisine || '',
+        tags,
+        ingredients: r.ingredients || [],
+        likes: r.likes || 0,
+        dislikes: r.dislikes || 0,
+        saves: r.saves || 0,
+        comments: r.commentCount || 0,
+        activity: r.activity || 0,
+        rating: r.likes > 0 ? Math.min(5, 3.5 + r.likes / 100) : 0,
+        time: (r.prepTimeMin || 0) + (r.cookTimeMin || 0),
+        summary: r.description || r.summary || '',
+        color: COLORS[idx % COLORS.length],
+        commentsThread: []
+      };
+    }
+
+    async function loadRecipes() {
+      try {
+        const [trendRes, topRes, browseRes] = await Promise.all([
+          fetch(`${API}/api/recipes/trending`, { credentials: 'include' }),
+          fetch(`${API}/api/recipes/top`, { credentials: 'include' }),
+          fetch(`${API}/api/recipes`, { credentials: 'include' })
+        ]);
+        if (trendRes.ok) {
+          const j = await trendRes.json();
+          trendingRecipes = (j.data || []).map(normalizeRecipe);
+        }
+        if (topRes.ok) {
+          const j = await topRes.json();
+          topRecipes = (j.data || []).map(normalizeRecipe);
+        }
+        if (browseRes.ok) {
+          const j = await browseRes.json();
+          recipes = ((j.data && j.data.recipes) || j.data || []).map(normalizeRecipe);
+        }
+      } catch (e) { /* server not running — recipes stays empty */ }
+      render();
+    }
+
+    async function loadRecommendations() {
+      try {
+        const res = await fetch(`${API}/api/member/recipes/recommend`, { credentials: 'include' });
+        if (!res.ok) return;
+        const j = await res.json();
+        const recs = (j.data || []).map((r, i) => normalizeRecipe(r.recipe || r, i));
+        renderMiniList(els.inYourPantry, recs.slice(0, 4));
+      } catch (e) { /* ignore */ }
+    }
+
+    async function loadPantryPreview() {
+      try {
+        const res = await fetch(`${API}/api/member/pantry`, { credentials: 'include' });
+        if (!res.ok) return;
+        const j = await res.json();
+        pantryItems = (j.data || []).map(r => (r.ingredientName || r.ingredientId || '').toLowerCase()).filter(Boolean);
+        els.pantryPreview.innerHTML = pantryItems.map(item => `<span class="rounded-full border border-gray-700 bg-gray-900 px-3 py-1 text-xs text-gray-300">${item}</span>`).join('');
+      } catch (e) { /* ignore */ }
+    }
 
     const state = {
       search: "",
@@ -369,10 +336,7 @@
       pantryPreview: document.getElementById('pantryPreview'),
       pantryMatchToggle: document.getElementById('pantryMatchToggle'),
       allergyToggle: document.getElementById('allergyToggle'),
-      loginModal: document.getElementById('loginModal'),
       loginBtn: document.getElementById('loginBtn'),
-      closeLoginBtn: document.getElementById('closeLoginBtn'),
-      loginForm: document.getElementById('loginForm'),
       sessionLabel: document.getElementById('sessionLabel'),
       clearFiltersBtn: document.getElementById('clearFiltersBtn'),
       selectedBadge: document.getElementById('selectedBadge'),
@@ -494,11 +458,12 @@
       state.selectedRecipeId = recipe.id;
       const counts = summaryCounts(recipe);
       const pantryFit = Math.round(recipeMatchesPantry(recipe) * 100);
-      const selectedTag = state.loggedIn ? 'Member view' : 'Guest view';
-      els.selectedBadge.textContent = selectedTag;
+      els.selectedBadge.textContent = state.loggedIn ? 'Member view' : 'Guest view';
 
       const dynamic = state.dynamicComments.get(recipe.id) || [];
-      const thread = [...recipe.commentsThread, ...dynamic];
+      const thread = [...(recipe.commentsThread || []), ...dynamic];
+
+      const matchedIngredients = (recipe.ingredients || []).filter(i => pantryItems.includes(normalize(i)));
 
       els.detailPanel.innerHTML = `
         <div class="rounded-2xl border border-gray-800 overflow-hidden">
@@ -522,11 +487,15 @@
               <button class="reaction-btn rounded-2xl border border-gray-800 bg-gray-900 py-3 text-sm hover:border-rose-500/40 transition disabled:cursor-not-allowed disabled:opacity-50" data-action="dislike" data-id="${recipe.id}" ${state.loggedIn ? '' : 'disabled'}>👎 <span>${counts.dislikes}</span></button>
               <button class="reaction-btn rounded-2xl border border-gray-800 bg-gray-900 py-3 text-sm hover:border-purple-500/40 transition disabled:cursor-not-allowed disabled:opacity-50" data-action="save" data-id="${recipe.id}" ${state.loggedIn ? '' : 'disabled'}>${state.savedRecipes.has(recipe.id) ? '★ Saved' : '☆ Save'}</button>
             </div>
+            ${state.loggedIn ? `
+            <button id="makeRecipeBtn" data-id="${recipe.id}" class="w-full rounded-2xl bg-green-700 hover:bg-green-600 text-white py-3 text-sm font-semibold transition">Make This Recipe</button>
+            <div id="makeRecipeResult" class="hidden rounded-2xl border px-4 py-3 text-sm"></div>
+            ` : ''}
             <div class="grid sm:grid-cols-2 gap-3 text-sm">
               <div class="rounded-2xl border border-gray-800 bg-gray-900 p-4">
                 <p class="text-gray-500 text-xs uppercase tracking-wider">Pantry fit</p>
                 <p class="text-2xl font-bold mt-1">${pantryFit}%</p>
-                <p class="text-gray-400 text-xs mt-1">${recipe.ingredients.filter(i => pantryItems.includes(normalize(i))).join(', ') || 'No pantry overlap yet'}</p>
+                <p class="text-gray-400 text-xs mt-1">${matchedIngredients.join(', ') || 'No pantry overlap yet'}</p>
               </div>
               <div class="rounded-2xl border border-gray-800 bg-gray-900 p-4">
                 <p class="text-gray-500 text-xs uppercase tracking-wider">Popularity</p>
@@ -534,13 +503,27 @@
                 <p class="text-gray-400 text-xs mt-1">Net score from community activity</p>
               </div>
             </div>
+            ${recipe.ingredients && recipe.ingredients.length ? `
+            <div class="rounded-2xl border border-gray-800 bg-gray-900 p-4">
+              <p class="text-gray-500 text-xs uppercase tracking-wider mb-2">Ingredients</p>
+              <ul class="space-y-1 text-sm text-gray-300">
+                ${recipe.ingredients.map(i => `<li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-purple-400 shrink-0"></span>${i}</li>`).join('')}
+              </ul>
+            </div>` : '<div id="ingredientsBlock" class="rounded-2xl border border-dashed border-gray-700 bg-gray-950 px-4 py-3 text-xs text-gray-500">Loading ingredients…</div>'}
+            ${recipe.steps && recipe.steps.length ? `
+            <div class="rounded-2xl border border-gray-800 bg-gray-900 p-4">
+              <p class="text-gray-500 text-xs uppercase tracking-wider mb-2">Steps</p>
+              <ol class="space-y-2 text-sm text-gray-300 list-decimal list-inside">
+                ${recipe.steps.map(s => `<li>${s}</li>`).join('')}
+              </ol>
+            </div>` : '<div id="stepsBlock" class="rounded-2xl border border-dashed border-gray-700 bg-gray-950 px-4 py-3 text-xs text-gray-500">Loading steps…</div>'}
           </div>
         </div>
 
         <div class="rounded-2xl border border-gray-800 bg-gray-950 p-4">
           <div class="flex items-center justify-between mb-3">
             <h4 class="font-semibold">Threaded comments</h4>
-            <span class="text-xs text-gray-500">${thread.length} top-level comments</span>
+            <span class="text-xs text-gray-500">${thread.length > 0 ? thread.length + ' comment' + (thread.length !== 1 ? 's' : '') : 'Loading…'}</span>
           </div>
           <form class="mb-4 space-y-3 comment-form" data-id="${recipe.id}">
             <label class="block text-xs uppercase tracking-wider text-gray-500">Add a comment</label>
@@ -550,8 +533,8 @@
               <button type="submit" ${state.loggedIn ? '' : 'disabled'} class="rounded-full bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 transition disabled:cursor-not-allowed disabled:opacity-50">Post</button>
             </div>
           </form>
-          <div class="space-y-4">
-            ${thread.map(comment => `
+          <div id="commentsThread" class="space-y-4">
+            ${thread.length === 0 ? '<p class="text-xs text-gray-500">Loading comments…</p>' : thread.map(comment => `
               <div class="rounded-2xl border border-gray-800 bg-gray-900 p-4">
                 <div class="flex items-start justify-between gap-3">
                   <div>
@@ -560,16 +543,6 @@
                   </div>
                   <button class="text-xs text-gray-400 hover:text-white transition">Reply</button>
                 </div>
-                ${comment.replies && comment.replies.length ? `
-                  <div class="mt-3 ml-4 pl-4 border-l border-gray-700 space-y-3">
-                    ${comment.replies.map(reply => `
-                      <div>
-                        <p class="text-xs font-semibold text-gray-400">${reply.user}</p>
-                        <p class="text-sm text-gray-300">${reply.text}</p>
-                      </div>
-                    `).join('')}
-                  </div>
-                ` : ''}
               </div>
             `).join('')}
           </div>
@@ -590,66 +563,157 @@
       renderMiniList(els.inYourPantry, pantryMatches);
     }
 
+    async function openRecipe(id) {
+      const numId = Number(id);
+      const base = [...recipes, ...trendingRecipes, ...topRecipes].find(r => r.id === id || r.id === numId);
+      if (base) renderPanel(base);
+      state.selectedRecipeId = numId || id;
+
+      try {
+        const [detailRes, commentsRes] = await Promise.all([
+          fetch(`${API}/api/recipes/${id}`, { credentials: 'include' }),
+          fetch(`${API}/api/recipes/${id}/comments`, { credentials: 'include' })
+        ]);
+        let detail = null, rawComments = [];
+        if (detailRes.ok) { const j = await detailRes.json(); detail = j.data; }
+        if (commentsRes.ok) { const j = await commentsRes.json(); rawComments = j.data || []; }
+
+        if (detail) {
+          const enriched = {
+            ...(base || normalizeRecipe(detail.recipe, 0)),
+            ingredients: (detail.ingredients || []).map(i => {
+              const name = i.ingredientName || i.ingredientId || '';
+              const qty = i.quantity ? `${i.quantity}${i.unit ? ' ' + i.unit : ''}` : '';
+              return qty ? `${qty} ${name}` : name;
+            }).filter(Boolean),
+            steps: detail.steps || [],
+            likes: detail.likes ?? (base ? base.likes : 0),
+            dislikes: detail.dislikes ?? (base ? base.dislikes : 0),
+            saves: detail.saves ?? (base ? base.saves : 0),
+            commentsThread: rawComments.map(c => ({ user: c.username || c.userId || 'User', text: c.body, replies: [] }))
+          };
+          renderPanel(enriched);
+        }
+      } catch (e) { /* already showing basic data */ }
+    }
+
     function render() {
       const visible = visibleRecipes();
       els.guestBanner.classList.toggle('hidden', state.loggedIn);
       els.resultCount.textContent = `${visible.length} recipes found`;
 
-      const trending = [...recipes].sort((a, b) => b.activity - a.activity).slice(0, 4);
-      const top = [...recipes].sort((a, b) => (b.likes - b.dislikes) - (a.likes - a.dislikes)).slice(0, 4);
+      const tDisplay = trendingRecipes.length ? trendingRecipes.slice(0, 4) : [...recipes].sort((a, b) => b.activity - a.activity).slice(0, 4);
+      const topDisplay = topRecipes.length ? topRecipes.slice(0, 4) : [...recipes].sort((a, b) => (b.likes - b.dislikes) - (a.likes - a.dislikes)).slice(0, 4);
 
-      els.trendingGrid.innerHTML = trending.map(recipeCard).join('');
-      els.topGrid.innerHTML = top.map(recipeCard).join('');
+      els.trendingGrid.innerHTML = tDisplay.length ? tDisplay.map(recipeCard).join('') : '<p class="text-gray-500 text-sm col-span-full">No data yet.</p>';
+      els.topGrid.innerHTML = topDisplay.length ? topDisplay.map(recipeCard).join('') : '<p class="text-gray-500 text-sm col-span-full">No data yet.</p>';
       els.resultsGrid.innerHTML = visible.length ? visible.map(recipeCard).join('') : `
         <div class="col-span-full rounded-3xl border border-dashed border-gray-700 bg-gray-950 p-8 text-center text-gray-400">
-          No recipes match your filters. Try clearing a filter or searching something else.
+          ${recipes.length === 0 ? 'Connect to the backend to load community recipes.' : 'No recipes match your filters. Try clearing a filter or searching something else.'}
         </div>
       `;
-      els.pantryPreview.innerHTML = pantryItems.map(item => `<span class="rounded-full border border-gray-700 bg-gray-900 px-3 py-1 text-xs text-gray-300">${item}</span>`).join('');
 
       const selected = recipes.find(r => r.id === state.selectedRecipeId) || visible[0] || recipes[0];
       if (selected) renderPanel(selected);
 
       document.querySelectorAll('[data-recipe-id]').forEach(el => {
         el.addEventListener('click', (e) => {
-          const recipeId = Number(el.dataset.recipeId);
-          const recipe = recipes.find(r => r.id === recipeId);
-          if (!recipe) return;
           if (e.target.closest('.reaction-btn')) return;
-          renderPanel(recipe);
+          openRecipe(el.dataset.recipeId);
           window.scrollTo({ top: 0, behavior: 'smooth' });
         });
       });
 
       document.querySelectorAll('.reaction-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
           e.stopPropagation();
           if (!state.loggedIn) return;
-          const id = Number(btn.dataset.id);
+          const id = btn.dataset.id;
           const action = btn.dataset.action;
-          const current = state.reactions.get(id) || { likes: 0, dislikes: 0 };
-          const next = { ...current };
-          if (action === 'like') next.likes += 1;
-          if (action === 'dislike') next.dislikes += 1;
-          if (action === 'save') {
-            if (state.savedRecipes.has(id)) state.savedRecipes.delete(id);
-            else state.savedRecipes.add(id);
-          }
-          state.reactions.set(id, next);
-          render();
+          try {
+            if (action === 'like') {
+              await fetch(`${API}/api/member/recipes/${id}/like`, {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isLike: true })
+              });
+            } else if (action === 'dislike') {
+              await fetch(`${API}/api/member/recipes/${id}/like`, {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ isLike: false })
+              });
+            } else if (action === 'save') {
+              const isSaved = state.savedRecipes.has(id);
+              await fetch(`${API}/api/member/recipes/${id}/save`, {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ save: !isSaved })
+              });
+              if (isSaved) state.savedRecipes.delete(id);
+              else state.savedRecipes.add(id);
+            }
+          } catch (err) { /* ignore */ }
+          // Refresh detail panel counts from API
+          const numId = Number(id);
+          const recipe = [...recipes, ...trendingRecipes, ...topRecipes].find(r => r.id === id || r.id === numId);
+          if (recipe) renderPanel(recipe);
         });
       });
 
+      const makeBtn = document.getElementById('makeRecipeBtn');
+      if (makeBtn) {
+        makeBtn.addEventListener('click', async () => {
+          const id = makeBtn.dataset.id;
+          const resultEl = document.getElementById('makeRecipeResult');
+          makeBtn.disabled = true;
+          makeBtn.textContent = 'Making…';
+          try {
+            const res = await fetch(`${API}/api/member/recipes/${id}/make`, {
+              method: 'POST', credentials: 'include'
+            });
+            const json = await res.json().catch(() => ({}));
+            if (res.ok) {
+              const used = json.data?.used || [];
+              const missing = json.data?.missing || [];
+              let msg = used.length ? `Used: ${used.join(', ')}.` : 'No pantry items matched.';
+              if (missing.length) msg += ` Missing from pantry: ${missing.join(', ')}.`;
+              resultEl.textContent = msg;
+              resultEl.className = 'rounded-2xl border border-green-500/40 bg-green-900/20 px-4 py-3 text-sm text-green-300';
+              resultEl.classList.remove('hidden');
+            } else {
+              resultEl.textContent = json.error || 'Could not make recipe.';
+              resultEl.className = 'rounded-2xl border border-red-500/40 bg-red-900/20 px-4 py-3 text-sm text-red-300';
+              resultEl.classList.remove('hidden');
+            }
+          } catch (_) {
+            resultEl.textContent = 'Could not reach server.';
+            resultEl.className = 'rounded-2xl border border-red-500/40 bg-red-900/20 px-4 py-3 text-sm text-red-300';
+            resultEl.classList.remove('hidden');
+          } finally {
+            makeBtn.disabled = false;
+            makeBtn.textContent = 'Make This Recipe';
+          }
+        });
+      }
+
       document.querySelectorAll('.comment-form').forEach(form => {
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', async (e) => {
           e.preventDefault();
           if (!state.loggedIn) return;
-          const recipeId = Number(form.dataset.id);
+          const recipeId = form.dataset.id;
           const textarea = form.querySelector('textarea');
           const text = textarea.value.trim();
           if (!text) return;
+          try {
+            await fetch(`${API}/api/member/comments`, {
+              method: 'POST', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ recipeId, content: text })
+            });
+          } catch (err) { /* ignore */ }
           const list = state.dynamicComments.get(recipeId) || [];
-          list.unshift({ user: 'You', text, replies: [] });
+          list.unshift({ user: window.currentUser?.username || 'You', text, replies: [] });
           state.dynamicComments.set(recipeId, list);
           textarea.value = '';
           render();
@@ -657,16 +721,26 @@
       });
 
       document.querySelectorAll('.mini-recipe').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const recipe = recipes.find(r => r.id === Number(btn.dataset.recipeId));
-          if (recipe) renderPanel(recipe);
-        });
+        btn.addEventListener('click', () => openRecipe(btn.dataset.recipeId));
       });
     }
 
+    let searchTimer;
     els.searchInput.addEventListener('input', () => {
       state.search = els.searchInput.value;
-      render();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(async () => {
+        const q = state.search.trim();
+        try {
+          const url = q ? `${API}/api/recipes?q=${encodeURIComponent(q)}` : `${API}/api/recipes`;
+          const res = await fetch(url, { credentials: 'include' });
+          if (res.ok) {
+            const j = await res.json();
+            recipes = ((j.data && j.data.recipes) || j.data || []).map(normalizeRecipe);
+          }
+        } catch (e) { /* ignore */ }
+        render();
+      }, 350);
     });
 
     els.pantryMatchToggle.addEventListener('change', () => {
@@ -705,50 +779,74 @@
       render();
     });
 
-    els.loginBtn.addEventListener('click', () => {
-      els.loginModal.dataset.hidden = 'false';
-      els.loginModal.classList.remove('hidden');
-    });
-
-    els.closeLoginBtn.addEventListener('click', () => {
-      els.loginModal.dataset.hidden = 'true';
-      els.loginModal.classList.add('hidden');
-    });
-
-    els.loginModal.addEventListener('click', (e) => {
-      if (e.target === els.loginModal) {
-        els.loginModal.dataset.hidden = 'true';
-        els.loginModal.classList.add('hidden');
-      }
-    });
-
-    els.loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
+    window.onAuthLogin = function(user) {
       state.loggedIn = true;
       document.body.classList.add('member-view');
-      els.sessionLabel.textContent = `Logged in as ${document.getElementById('loginEmail').value.split('@')[0]}`;
-      els.loginModal.dataset.hidden = 'true';
-      els.loginModal.classList.add('hidden');
-      els.loginBtn.textContent = 'Log Out';
-      els.loginBtn.onclick = () => {
-        state.loggedIn = false;
-        els.sessionLabel.textContent = 'Guest view';
-        els.loginBtn.textContent = 'Log In';
-        els.loginBtn.onclick = null;
-        location.reload();
-      };
+      els.sessionLabel.textContent = `Logged in as ${user.username}`;
+      document.getElementById('guestBanner')?.classList.add('hidden');
+      loadPantryPreview();
+      loadRecommendations();
       render();
-    });
+    };
+    window.onAuthLogout = function() {
+      state.loggedIn = false;
+      pantryItems = [];
+      document.body.classList.remove('member-view');
+      els.sessionLabel.textContent = 'Guest view';
+      document.getElementById('guestBanner')?.classList.remove('hidden');
+      els.pantryPreview.innerHTML = '';
+      els.inYourPantry.innerHTML = '';
+      render();
+    };
 
     document.addEventListener('click', (e) => {
       const mini = e.target.closest('.mini-recipe');
-      if (mini) {
-        const recipe = recipes.find(r => r.id === Number(mini.dataset.recipeId));
-        if (recipe) renderPanel(recipe);
-      }
+      if (mini) openRecipe(mini.dataset.recipeId);
     });
 
-    render();
+    async function runGuestDemo() {
+      const input = document.getElementById('guestIngredientInput');
+      const resultsEl = document.getElementById('guestDemoResults');
+      const raw = input?.value.trim();
+      if (!raw) return;
+
+      const ingredients = raw.split(',').map(s => s.trim()).filter(Boolean);
+      resultsEl.innerHTML = '<p class="text-amber-300 text-xs">Finding matches…</p>';
+      resultsEl.classList.remove('hidden');
+
+      try {
+        const res = await fetch(`${API}/api/guest/demo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ingredients })
+        });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          resultsEl.innerHTML = `<p class="text-red-300 text-xs">${json.error || 'Could not fetch suggestions.'}</p>`;
+          return;
+        }
+        const items = json.data || [];
+        if (!items.length) {
+          resultsEl.innerHTML = '<p class="text-amber-300 text-xs">No matching recipes found. Try different ingredients.</p>';
+          return;
+        }
+        resultsEl.innerHTML = `
+          <p class="text-amber-300 text-xs mb-2">Top matches for your ingredients — <button onclick="toggleModal()" class="underline hover:text-amber-200">log in</button> to save &amp; interact.</p>
+          ${items.map(r => `
+            <div class="flex items-center justify-between rounded-xl bg-amber-900/20 border border-amber-500/20 px-3 py-2 gap-3">
+              <div>
+                <p class="text-sm font-semibold text-amber-100">${r.title}</p>
+                <p class="text-xs text-amber-300/70">${r.cuisineType} · ${r.pantryScore}% pantry match · ${r.missing} missing</p>
+              </div>
+            </div>
+          `).join('')}
+        `;
+      } catch (_) {
+        resultsEl.innerHTML = '<p class="text-red-300 text-xs">Could not reach server. Is Tomcat running?</p>';
+      }
+    }
+
+    loadRecipes();
   </script>
 </body>
 </html>
