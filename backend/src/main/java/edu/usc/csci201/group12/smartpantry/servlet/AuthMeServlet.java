@@ -2,7 +2,6 @@ package edu.usc.csci201.group12.smartpantry.servlet;
 
 import edu.usc.csci201.group12.smartpantry.dao.UserStore;
 import edu.usc.csci201.group12.smartpantry.json.JsonApiResponse;
-import edu.usc.csci201.group12.smartpantry.model.User;
 import edu.usc.csci201.group12.smartpantry.security.SessionAttributes;
 import edu.usc.csci201.group12.smartpantry.web.ContextKeys;
 import jakarta.servlet.annotation.WebServlet;

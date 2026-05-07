@@ -36,6 +36,7 @@ public final class JdbcConnectionFactory {
         if (url == null) {
             throw new SQLException("No database connection configured. Set JNDI jdbc/PantryAppDB or PANTRY_DB_URL.");
         }
+        try { Class.forName("com.mysql.cj.jdbc.Driver"); } catch (ClassNotFoundException ignored) {}
         if (user == null) {
             return DriverManager.getConnection(url);
         }

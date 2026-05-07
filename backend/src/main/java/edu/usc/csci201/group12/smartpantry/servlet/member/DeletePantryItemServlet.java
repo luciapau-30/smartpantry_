@@ -3,7 +3,6 @@ package edu.usc.csci201.group12.smartpantry.servlet.member;
 import edu.usc.csci201.group12.smartpantry.dao.PantryItemDao;
 import edu.usc.csci201.group12.smartpantry.dao.PantryItemRow;
 import edu.usc.csci201.group12.smartpantry.dao.UserStore;
-import edu.usc.csci201.group12.smartpantry.json.GsonProvider;
 import edu.usc.csci201.group12.smartpantry.json.JsonApiResponse;
 import edu.usc.csci201.group12.smartpantry.model.Member;
 import edu.usc.csci201.group12.smartpantry.security.RequestUsers;

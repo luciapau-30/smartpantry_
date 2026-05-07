@@ -1,7 +1,10 @@
 package edu.usc.csci201.group12.smartpantry.servlet.member;
 
 import edu.usc.csci201.group12.smartpantry.api.member.AddToPantryRequest;
+import edu.usc.csci201.group12.smartpantry.dao.Ingredient;
+import edu.usc.csci201.group12.smartpantry.dao.IngredientDao;
 import edu.usc.csci201.group12.smartpantry.dao.UserStore;
+import edu.usc.csci201.group12.smartpantry.recommendation.IngredientSynonymResolver;
 import edu.usc.csci201.group12.smartpantry.json.GsonProvider;
 import edu.usc.csci201.group12.smartpantry.json.JsonApiResponse;
 import edu.usc.csci201.group12.smartpantry.model.Member;
@@ -38,9 +41,37 @@ public final class AddToPantryServlet extends AbstractJsonServlet {
         }
 
         AddToPantryRequest in = GsonProvider.get().fromJson(jsonBody, AddToPantryRequest.class);
-        if (in == null || in.ingredientId() == null || in.quantity() == null) {
-            writeJson(resp, HttpServletResponse.SC_BAD_REQUEST, JsonApiResponse.fail("ingredientId and quantity required"));
+        if (in == null || in.quantity() == null) {
+            writeJson(resp, HttpServletResponse.SC_BAD_REQUEST, JsonApiResponse.fail("quantity required"));
             return;
+        }
+
+        // Resolve ingredient: prefer explicit ID, otherwise look up by name (or create if new)
+        String ingredientId = in.ingredientId();
+        if (ingredientId == null || ingredientId.isBlank()) {
+            String name = in.itemName();
+            if (name == null || name.isBlank()) {
+                writeJson(resp, HttpServletResponse.SC_BAD_REQUEST, JsonApiResponse.fail("ingredientId or itemName required"));
+                return;
+            }
+            IngredientDao dao = new IngredientDao();
+            // Run synonym resolver first: "steak" → "beef", "roma tomatoes" → "tomatoes"
+            String canonical = IngredientSynonymResolver.loadFromClasspath().canonical(name.trim().toLowerCase());
+            Ingredient ing = dao.getByName(canonical);
+            if (ing == null && !canonical.equalsIgnoreCase(name.trim())) {
+                ing = dao.getByName(name.trim()); // try original if canonical not found
+            }
+            if (ing == null) {
+                // Truly unknown — create a new ingredient so the item can still be saved
+                String storeName = canonical.isEmpty() ? name.trim() : canonical;
+                dao.createIngredient(storeName, "other", in.unit() != null ? in.unit() : "each", null);
+                ing = dao.getByName(storeName);
+            }
+            if (ing == null) {
+                writeJson(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, JsonApiResponse.fail("Could not resolve ingredient"));
+                return;
+            }
+            ingredientId = ing.getId();
         }
 
         LocalDate expiration = null;
@@ -54,7 +85,7 @@ public final class AddToPantryServlet extends AbstractJsonServlet {
         }
 
         try {
-            String pantryItemId = member.addToPantry(in.ingredientId(), in.quantity(), in.unit(), expiration);
+            String pantryItemId = member.addToPantry(ingredientId, in.quantity(), in.unit(), expiration);
             PantryEventBroadcaster broadcaster = (PantryEventBroadcaster)
                     req.getServletContext().getAttribute(ContextKeys.EVENT_BROADCASTER);
             if (broadcaster != null) {

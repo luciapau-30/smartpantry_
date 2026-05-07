@@ -3,7 +3,6 @@ package edu.usc.csci201.group12.smartpantry.servlet;
 import edu.usc.csci201.group12.smartpantry.dao.RecipeLikeDao;
 import edu.usc.csci201.group12.smartpantry.dao.RecipeRow;
 import edu.usc.csci201.group12.smartpantry.recipe.RecipeDao;
-import edu.usc.csci201.group12.smartpantry.servlet.AbstractJsonServlet;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

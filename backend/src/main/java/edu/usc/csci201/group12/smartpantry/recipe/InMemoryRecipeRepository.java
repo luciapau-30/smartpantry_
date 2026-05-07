@@ -23,17 +23,20 @@ public final class InMemoryRecipeRepository implements RecipeRepository {
                     "r1",
                     "Lentil soup",
                     "Hearty soup with pantry staples.",
-                    List.of("lentils", "carrot", "onion", "vegetable stock")),
+                    List.of("lentils", "carrot", "onion", "vegetable stock"),
+                    10, 30, "Mediterranean"),
             new RecipeSummary(
                     "r2",
                     "Tomato pasta",
                     "Quick weeknight pasta.",
-                    List.of("pasta", "tomato", "garlic", "olive oil")),
+                    List.of("pasta", "tomato", "garlic", "olive oil"),
+                    5, 20, "Italian"),
             new RecipeSummary(
                     "r3",
                     "Garden salad",
                     "Fresh side salad.",
-                    List.of("lettuce", "tomato", "cucumber", "olive oil")));
+                    List.of("lettuce", "tomato", "cucumber", "olive oil"),
+                    10, 0, "American"));
 
     /**
      * Full Recipe objects with quantities, used by the recommendation engine.

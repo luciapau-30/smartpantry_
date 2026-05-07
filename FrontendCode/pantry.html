@@ -60,13 +60,19 @@
                 </div>
 
                 <div class="flex flex-col sm:items-end gap-2 sm:min-w-[180px]">
-                    <button type="button" onclick="openAddItemModal()" class="w-full sm:w-auto inline-flex justify-center items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition shadow">
+                    <button id="addItemBtn" type="button" onclick="openAddItemModal()" disabled
+                        title="Log in to add items"
+                        class="w-full sm:w-auto inline-flex justify-center items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition shadow disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none">
                         Add Item
                     </button>
-                    <button type="button" onclick="importItems()" class="w-full sm:w-auto inline-flex justify-center items-center bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition shadow">
+                    <button id="importCsvBtn" type="button" onclick="importItems()" disabled
+                        title="Log in to import items"
+                        class="w-full sm:w-auto inline-flex justify-center items-center bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition shadow disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none">
                         Import CSV
                     </button>
-                    <button type="button" onclick="openTextImportModal()" class="w-full sm:w-auto inline-flex justify-center items-center bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition shadow">
+                    <button id="importTextBtn" type="button" onclick="openTextImportModal()" disabled
+                        title="Log in to import items"
+                        class="w-full sm:w-auto inline-flex justify-center items-center bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition shadow disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none">
                         Import with Text Field
                     </button>
                 </div>
@@ -445,7 +451,7 @@
             return csvRows.join('\n');
         }
 
-        function processTextImport() {
+        async function processTextImport() {
             const textarea = document.getElementById('textImportInput');
             const raw = textarea ? textarea.value : '';
             const converted = textImportToCsv(raw);
@@ -455,7 +461,7 @@
             }
 
             closeTextImportModal();
-            processCsvImport(converted);
+            await processCsvImport(converted);
         }
 
         function normalizeHeader(header) {
@@ -691,11 +697,36 @@
             return { status: 'reject', reason: 'Row ' + rowNumber + ': invalid expiration date "' + value + '"' };
         }
 
-        function appendImportedRows(rows) {
-            for (let i = rows.length - 1; i >= 0; i -= 1) {
-                pantryItems.unshift(rows[i]);
+        async function appendImportedRows(rows) {
+            let savedToServer = false;
+            try {
+                for (const row of rows) {
+                    const isoDate = toInputDate(row.expiration);
+                    const body = {
+                        itemName: row.name,
+                        quantity: parseFloat(row.quantity) || 1,
+                        unit: row.unit || 'Count',
+                        expirationDate: isoDate || null
+                    };
+                    const res = await fetch(`${API}/api/member/pantry/add`, {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+                    if (res.status === 401) break;
+                    if (res.ok) savedToServer = true;
+                }
+            } catch (_) {}
+
+            if (savedToServer) {
+                await loadPantry();
+            } else {
+                for (let i = rows.length - 1; i >= 0; i -= 1) {
+                    pantryItems.unshift(rows[i]);
+                }
+                renderPantryList();
             }
-            renderPantryList();
         }
 
         function renderImportReviewPanel() {
@@ -798,7 +829,7 @@
             panel.classList.remove('hidden');
         }
 
-        function applyImportReview() {
+        async function applyImportReview() {
             if (!pendingImportReview) return;
             const context = pendingImportReview;
             const finalRows = context.acceptedRows.slice();
@@ -847,7 +878,7 @@
                 return;
             }
 
-            appendImportedRows(finalRows);
+            await appendImportedRows(finalRows);
             pendingImportReview = null;
             hideImportReviewPanel();
             const message = 'Imported ' + finalRows.length + ' row(s).' + (verifiedCount > 0 ? ' Reviewed ' + verifiedCount + ' row(s).' : '') + (skippedCount > 0 ? ' Skipped ' + skippedCount + ' row(s).' : '');
@@ -860,7 +891,7 @@
             showImportFeedback('Import cancelled. No rows were added.', true);
         }
 
-        function processCsvImport(csvText) {
+        async function processCsvImport(csvText) {
             const lines = String(csvText || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
             if (lines.length < 2) {
                 showImportFeedback('Import failed: CSV must include a header row and at least one item row.', true);
@@ -949,7 +980,7 @@
             }
 
             if (!reviewRows.length) {
-                appendImportedRows(acceptedRows);
+                await appendImportedRows(acceptedRows);
                 hideImportReviewPanel();
                 const details = skippedCount > 0 ? skippedDetails.slice(0, 6) : [];
                 const message = 'Imported ' + acceptedRows.length + ' row(s).' + (skippedCount > 0 ? ' Skipped ' + skippedCount + ' row(s).' : '');
@@ -1135,12 +1166,22 @@
             }
         }
 
+        function setPantryActionsEnabled(enabled) {
+            ['addItemBtn', 'importCsvBtn', 'importTextBtn'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.disabled = !enabled;
+            });
+        }
+
         window.onAuthLogin = function() {
+            setPantryActionsEnabled(true);
             loadPantry();
+            document.getElementById('guestBanner')?.classList.add('hidden');
             document.getElementById('shoppingListSection')?.classList.remove('hidden');
             loadShoppingList();
         };
         window.onAuthLogout = function() {
+            setPantryActionsEnabled(false);
             pantryItems = [];
             renderPantryList();
             document.getElementById('guestBanner')?.classList.remove('hidden');
@@ -1170,10 +1211,37 @@
             const pantryList = document.getElementById('pantryList');
             let items = [];
 
-            const INLINE_ITEMS = [
-                'Eggs', 'Milk', 'Butter', 'Flour', 'Sugar', 'Salt', 'Olive Oil', 'Tomatoes', 'Onions', 'Garlic', 'Cheese', 'Yogurt', 'Chicken', 'Beef', 'Pasta', 'Rice', 'Bread', 'Coffee', 'Tea', 'Honey', 'Lemon', 'Potato', 'Carrot', 'Bell Pepper', 'Cucumber', 'Spinach', 'Apple', 'Banana', 'Orange', 'Mushrooms'
+            // ingredientList: array of { id, name } loaded from backend
+            let ingredientList = [];
+            let selectedIngredientId = null;
+
+            const FALLBACK_ITEMS = [
+                'Eggs', 'Milk', 'Butter', 'Flour', 'Sugar', 'Salt', 'Olive Oil', 'Tomatoes', 'Onions',
+                'Garlic', 'Cheese', 'Yogurt', 'Chicken', 'Beef', 'Pasta', 'Rice', 'Bread', 'Coffee',
+                'Tea', 'Honey', 'Lemon', 'Potato', 'Carrot', 'Bell Pepper', 'Cucumber', 'Spinach',
+                'Apple', 'Banana', 'Orange', 'Mushrooms'
             ];
-            items = INLINE_ITEMS.slice();
+
+            // Load ingredient catalog from backend; fall back to hardcoded list if unavailable
+            fetch(`${API}/api/ingredients`, { credentials: 'include' })
+                .then(r => r.json())
+                .then(j => {
+                    const rows = Array.isArray(j.data) ? j.data : [];
+                    if (rows.length) {
+                        ingredientList = rows.map(r => ({ id: r.id, name: r.name }));
+                        allowedItems = rows.map(r => r.name);
+                        items = allowedItems.slice();
+                    }
+                })
+                .catch(() => {
+                    ingredientList = FALLBACK_ITEMS.map(n => ({ id: null, name: n }));
+                    allowedItems = FALLBACK_ITEMS.slice();
+                    items = allowedItems.slice();
+                });
+
+            // Use fallback immediately so the dropdown works before the API responds
+            ingredientList = FALLBACK_ITEMS.map(n => ({ id: null, name: n }));
+            items = FALLBACK_ITEMS.slice();
             allowedItems = items.slice();
 
             const floating = document.createElement('div');
@@ -1198,52 +1266,71 @@
             window.addEventListener('resize', setPos);
             window.addEventListener('scroll', setPos, true);
 
-            function render(list) {
+            // each entry: { id, name, synonymOf? }
+            function renderSuggestions(list) {
                 floating.innerHTML = '';
-                if (!list || !list.length) {
-                    floating.style.display = 'none';
-                    return;
-                }
+                if (!list || !list.length) { floating.style.display = 'none'; return; }
                 floating.style.display = 'block';
                 list.forEach((it) => {
                     const row = document.createElement('div');
-                    row.className = 'px-3 py-2 cursor-pointer hover:bg-gray-700';
-                    row.textContent = it;
+                    row.className = 'px-3 py-2 cursor-pointer hover:bg-gray-700 flex items-center justify-between gap-2';
+                    row.dataset.name = it.name;
+                    row.dataset.id = it.id || '';
+                    const nameEl = document.createElement('span');
+                    nameEl.textContent = it.name;
+                    row.appendChild(nameEl);
+                    if (it.synonymOf) {
+                        const hint = document.createElement('span');
+                        hint.className = 'text-xs text-gray-400 shrink-0';
+                        hint.textContent = `← "${it.synonymOf}"`;
+                        row.appendChild(hint);
+                    }
                     row.addEventListener('mousedown', (ev) => {
                         ev.preventDefault();
-                        if (itemNameInput) itemNameInput.value = it;
+                        itemNameInput.value = it.name;
+                        selectedIngredientId = it.id || null;
                         floating.style.display = 'none';
-                        if (itemNameInput) itemNameInput.focus();
+                        itemNameInput.focus();
                     });
                     floating.appendChild(row);
                 });
             }
 
-            fetch('items-mock-db.txt').then(r => r.text()).then(t => {
-                const fetched = t.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-                const plausible = fetched.filter(line => /^[\w\s\-\&\.,']{1,80}$/.test(line));
-                if (plausible.length) items = plausible;
-                allowedItems = items.slice();
-                setPos();
-            }).catch(() => {
-                allowedItems = items.slice();
-                setPos();
-            });
-
+            setPos();
             let selected = -1;
+            let resolveTimer = null;
+
+            function showSuggestionsFor(q) {
+                if (!q) { floating.style.display = 'none'; return; }
+                const direct = ingredientList.filter(it => it.name.toLowerCase().includes(q)).slice(0, 8);
+                setPos();
+                renderSuggestions(direct);
+                selected = -1;
+
+                // If fewer than 3 direct matches, also check synonyms via backend resolve
+                clearTimeout(resolveTimer);
+                if (direct.length < 3) {
+                    resolveTimer = setTimeout(async () => {
+                        try {
+                            const r = await fetch(`${API}/api/ingredients?resolve=${encodeURIComponent(q)}`);
+                            const j = await r.json();
+                            const d = j.data;
+                            if (d && d.id && !d.exact) {
+                                const alreadyShown = direct.some(it => it.name.toLowerCase() === d.canonical.toLowerCase());
+                                if (!alreadyShown) {
+                                    renderSuggestions([...direct, { id: d.id, name: d.canonical, synonymOf: q }]);
+                                }
+                            }
+                        } catch (_) {}
+                    }, 300);
+                }
+            }
 
             if (itemNameInput) {
                 itemNameInput.addEventListener('input', (e) => {
                     if (itemErrorEl) itemErrorEl.classList.add('hidden');
-                    const q = e.target.value.toLowerCase();
-                    if (!q) {
-                        floating.style.display = 'none';
-                        return;
-                    }
-                    const filtered = items.filter(it => it.toLowerCase().includes(q)).slice(0, 50);
-                    setPos();
-                    render(filtered);
-                    selected = -1;
+                    selectedIngredientId = null;
+                    showSuggestionsFor(e.target.value.toLowerCase().trim());
                 });
 
                 itemNameInput.addEventListener('keydown', (e) => {
@@ -1263,7 +1350,9 @@
                     } else if (e.key === 'Enter') {
                         if (selected >= 0 && children[selected]) {
                             e.preventDefault();
-                            itemNameInput.value = children[selected].textContent;
+                            const row = children[selected];
+                            itemNameInput.value = row.dataset.name;
+                            selectedIngredientId = row.dataset.id || null;
                             floating.style.display = 'none';
                             itemNameInput.focus();
                         }
@@ -1275,14 +1364,9 @@
                 itemNameInput.addEventListener('blur', () => setTimeout(() => floating.style.display = 'none', 150));
                 itemNameInput.addEventListener('focus', () => {
                     setPos();
-                    const q = itemNameInput.value.toLowerCase();
-                    if (!q || itemNameInput.readOnly) {
-                        floating.style.display = 'none';
-                        return;
-                    }
-                    const filtered = items.filter(it => it.toLowerCase().includes(q)).slice(0, 50);
-                    render(filtered);
-                    selected = -1;
+                    const q = itemNameInput.value.toLowerCase().trim();
+                    if (!q || itemNameInput.readOnly) { floating.style.display = 'none'; return; }
+                    showSuggestionsFor(q);
                 });
             }
 
@@ -1292,12 +1376,7 @@
                 addItemForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
                     const name = itemNameInput.value.trim();
-                    const ok = allowedItems.some(it => it.toLowerCase() === name.toLowerCase());
-                    if (!ok) {
-                        if (itemErrorEl) itemErrorEl.classList.remove('hidden');
-                        itemNameInput.focus();
-                        return;
-                    }
+                    if (!name) { itemNameInput.focus(); return; }
 
                     if (itemErrorEl) itemErrorEl.classList.add('hidden');
 
@@ -1314,25 +1393,37 @@
 
                     if (editingItemIndex === null) {
                         try {
+                            // Use ingredientId if user picked from dropdown, otherwise send name for backend resolution
+                            const body = selectedIngredientId
+                                ? { ingredientId: selectedIngredientId, quantity: parseFloat(quantity) || 1, unit, expirationDate: expirationValue || null }
+                                : { itemName: name, quantity: parseFloat(quantity) || 1, unit, expirationDate: expirationValue || null };
+
                             const res = await fetch(`${API}/api/member/pantry/add`, {
                                 method: 'POST',
                                 credentials: 'include',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    itemName: name,
-                                    quantity: parseFloat(quantity) || 1,
-                                    unit,
-                                    expirationDate: expirationValue || null
-                                })
+                                body: JSON.stringify(body)
                             });
                             if (res.status === 401) { toggleModal(); return; }
                             if (res.ok) {
+                                selectedIngredientId = null;
+                                closeAddItemModal();
                                 await loadPantry();
+                                return;
                             } else {
-                                pantryItems.unshift(updatedItem);
+                                const errJson = await res.json().catch(() => ({}));
+                                if (itemErrorEl) {
+                                    itemErrorEl.textContent = errJson.error || 'Could not save item — is the database connected?';
+                                    itemErrorEl.classList.remove('hidden');
+                                }
+                                return;
                             }
                         } catch (e) {
-                            pantryItems.unshift(updatedItem);
+                            if (itemErrorEl) {
+                                itemErrorEl.textContent = 'Could not reach the server.';
+                                itemErrorEl.classList.remove('hidden');
+                            }
+                            return;
                         }
                     } else {
                         pantryItems[editingItemIndex] = updatedItem;

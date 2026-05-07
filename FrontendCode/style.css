@@ -147,14 +147,14 @@ h1, h2, h3, h4, h5, h6 {
 /* ───── Amber tints (guest banner, warnings — keep warm) ───── */
 .border-amber-500\/30      { border-color: rgba(184,117,30,0.28) !important; }
 .bg-amber-500\/10          { background-color: rgba(184,117,30,0.07) !important; }
-.text-amber-200            { color: var(--amber-warm)  !important; }
-.text-amber-100            { color: var(--ink-muted)   !important; }
-.bg-amber-900\/30          { background-color: rgba(184,117,30,0.10) !important; }
-.text-amber-400\/60        { color: rgba(184,117,30,0.55) !important; }
-.border-amber-500\/40      { border-color: rgba(184,117,30,0.38) !important; }
-.border-amber-400          { border-color: var(--amber-warm) !important; }
-.focus\:border-amber-400:focus { border-color: var(--amber-warm) !important; }
-.text-amber-400            { color: var(--amber-warm) !important; }
+.text-amber-200            { color: var(--brown)      !important; }
+.text-amber-100            { color: var(--ink-muted)  !important; }
+.bg-amber-900\/30          { background-color: rgba(122,92,60,0.10) !important; }
+.text-amber-400\/60        { color: rgba(90,69,53,0.70) !important; }
+.border-amber-500\/40      { border-color: rgba(90,69,53,0.30) !important; }
+.border-amber-400          { border-color: var(--border-dk) !important; }
+.focus\:border-amber-400:focus { border-color: var(--border-dk) !important; }
+.text-amber-400            { color: var(--brown) !important; }
 
 /* ───── Red actions → Slate-5 dark plum (Remove button) ───── */
 .text-red-400, .text-red-500   { color: #A03030 !important; }
@@ -282,6 +282,20 @@ td { color: var(--espresso) !important; }
 .expiry-ok    { color: var(--sage)       !important; }
 .expiry-crit  { color: #A03030           !important; }
 
+/* ───── Import review card background (opacity variant not auto-remapped) ───── */
+.bg-gray-900\/60  { background-color: rgba(245,240,232,0.96) !important; }
+.bg-amber-900\/10 { background-color: rgba(184,117,30,0.06)  !important; }
+
+/* ───── Import feedback banner — success (green) ───── */
+.bg-green-900\/20     { background-color: rgba(80,107,66,0.09)  !important; }
+.text-green-200       { color: #3A5228                           !important; }
+.border-green-600\/60 { border-color: rgba(80,107,66,0.55)      !important; }
+
+/* ───── Import feedback banner — error (red) ───── */
+.bg-red-900\/20       { background-color: rgba(160,48,48,0.07)  !important; }
+.text-red-200         { color: #8B1F1F                           !important; }
+.border-red-600\/60   { border-color: rgba(160,48,48,0.50)      !important; }
+
 /* ───── Decorative detail: thin top accent bar on nav ───── */
 nav::before {
   content: '';
@@ -341,9 +355,9 @@ main, nav, footer { position: relative; z-index: 1; }
 .bg-emerald-500\/10    { background-color: rgba(80,107,66,0.10)  !important; }
 .text-emerald-300      { color: var(--sage)                      !important; }
 .border-emerald-500\/30{ border-color: rgba(80,107,66,0.30)      !important; }
-.bg-yellow-500\/10     { background-color: rgba(184,117,30,0.09) !important; }
-.text-yellow-300       { color: var(--amber-warm)                !important; }
-.border-yellow-500\/30 { border-color: rgba(184,117,30,0.28)     !important; }
+.bg-yellow-500\/10     { background-color: rgba(90,69,53,0.07)  !important; }
+.text-yellow-300       { color: var(--brown)                     !important; }
+.border-yellow-500\/30 { border-color: rgba(90,69,53,0.25)       !important; }
 .bg-cyan-500\/10       { background-color: rgba(74,123,120,0.10) !important; }
 .text-cyan-300         { color: #4A7B78                          !important; }
 .border-cyan-500\/30   { border-color: rgba(74,123,120,0.28)     !important; }
