@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS RECIPES (
     title         VARCHAR(255) NOT NULL,
     description   TEXT,
     image_url     VARCHAR(500),
+    difficulty    VARCHAR(50),
     prep_time_min INT          DEFAULT 0,
     cook_time_min INT          DEFAULT 0,
     servings      INT          DEFAULT 1,

@@ -64,9 +64,10 @@ public class JdbcRecipeRepository implements RecipeRepository {
     // Maps a RecipeRow to the lightweight RecipeSummary used by browse/search responses.
     private RecipeSummary toSummary(RecipeRow row) {
         List<String> ingredientNames = ingredientDao.getByRecipe(row.getId()).stream()
-                .map(ri -> ri.getIngredientId())
+                .map(ri -> ri.getIngredientName() != null ? ri.getIngredientName() : ri.getIngredientId())
                 .collect(Collectors.toList());
-        return new RecipeSummary(row.getId(), row.getTitle(), row.getDescription(), ingredientNames);
+        return new RecipeSummary(row.getId(), row.getTitle(), row.getDescription(), ingredientNames,
+                row.getPrepTimeMin(), row.getCookTimeMin(), row.getCategoryTags());
     }
 
     // Builds Archit's full Recipe domain object from DB rows.

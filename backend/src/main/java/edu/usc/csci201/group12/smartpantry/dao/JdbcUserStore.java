@@ -8,7 +8,6 @@ import edu.usc.csci201.group12.smartpantry.model.Member;
 import edu.usc.csci201.group12.smartpantry.model.User;
 import edu.usc.csci201.group12.smartpantry.recipe.RecipeRepository;
 
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Optional;
 
 public class JdbcUserStore implements UserStore {

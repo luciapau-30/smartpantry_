@@ -13,7 +13,7 @@ import java.util.UUID;
 public class UserDao {
 
     private static final String SELECT_COLS = """
-            SELECT id, username, email, password_hash, profile_picture_url, bio,
+            SELECT id, username, email, password_hash,
                    created_at, last_login, is_active, is_guest
             FROM USERS
             """;
@@ -162,8 +162,6 @@ public class UserDao {
         row.username = rs.getString("username");
         row.email = rs.getString("email");
         row.passwordHash = rs.getString("password_hash");
-        row.profilePictureUrl = rs.getString("profile_picture_url");
-        row.bio = rs.getString("bio");
         row.createdAt = rs.getTimestamp("created_at");
         row.lastLogin = rs.getTimestamp("last_login");
         row.active = rs.getBoolean("is_active");
