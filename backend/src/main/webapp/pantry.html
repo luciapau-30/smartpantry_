@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Pantry - My Pantry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+
+    <nav class="bg-gray-800 shadow-md border-b border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-8">
+                    <div class="flex-shrink-0 flex items-center">
+                        <span class="font-bold text-2xl text-purple-500">Smart Pantry</span>
+                    </div>
+                    
+                    <div class="hidden sm:ml-8 sm:flex sm:space-x-8">
+                        <a href="index.html" class="text-gray-400 hover:text-purple-400 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-500 text-sm font-medium transition">
+                            Explore Recipes
+                        </a>
+                        <a href="pantry.html" class="text-white inline-flex items-center px-1 pt-1 border-b-2 border-purple-500 text-sm font-medium">
+                            My Pantry
+                        </a>
+                        <a href="recipes.html" class="text-gray-400 hover:text-purple-400 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-500 text-sm font-medium transition">
+                            My Recipes
+                        </a>
+                    </div>
+                </div>
+
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    <button id="loginBtn" onclick="toggleModal()" class="bg-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-700 transition shadow-lg">
+                        Log In
+                    </button>
+                    <div id="userNav" class="hidden flex items-center space-x-3">
+                        <span id="usernameDisplay" class="text-gray-300 text-sm font-medium"></span>
+                        <button onclick="logout()" class="bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-600 transition">
+                            Log Out
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div id="guestBanner" class="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200 mb-4">
+            Guest view: log in to save your pantry.
+        </div>
+
+        <section class="rounded-2xl border border-gray-800 bg-gray-900/70 p-5 sm:p-6 shadow-xl">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div>
+                    <h1 class="text-4xl font-bold text-white tracking-tight">My Pantry</h1>
+                    <p class="mt-2 text-gray-400">Add, review, and update pantry items in one place.</p>
+                </div>
+
+                <div class="flex flex-col sm:items-end gap-2 sm:min-w-[180px]">
+                    <button id="addItemBtn" type="button" onclick="openAddItemModal()" disabled
+                        title="Log in to add items"
+                        class="w-full sm:w-auto inline-flex justify-center items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition shadow disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none">
+                        Add Item
+                    </button>
+                    <button id="importCsvBtn" type="button" onclick="importItems()" disabled
+                        title="Log in to import items"
+                        class="w-full sm:w-auto inline-flex justify-center items-center bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition shadow disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none">
+                        Import CSV
+                    </button>
+                    <button id="importTextBtn" type="button" onclick="openTextImportModal()" disabled
+                        title="Log in to import items"
+                        class="w-full sm:w-auto inline-flex justify-center items-center bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition shadow disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none">
+                        Import with Text Field
+                    </button>
+                </div>
+            </div>
+
+            <input id="csvImportInput" type="file" accept=".csv,text/csv" class="hidden">
+            <div id="importFeedback" class="hidden mt-4 rounded-lg border px-3 py-2 text-sm"></div>
+            <div id="importReviewPanel" class="hidden mt-4 rounded-lg border border-amber-500/40 bg-amber-900/10 p-4">
+                <h3 class="text-base font-semibold text-amber-200">Review Import Matches</h3>
+                <p id="importReviewSummary" class="mt-1 text-sm text-amber-100"></p>
+                <div id="importReviewList" class="mt-3 space-y-3 max-h-80 overflow-auto pr-1"></div>
+                <div class="mt-4 flex flex-wrap items-center gap-3">
+                    <button type="button" onclick="applyImportReview()" class="bg-amber-500 hover:bg-amber-600 text-black font-semibold px-4 py-2 rounded-lg transition">Apply Reviewed Imports</button>
+                    <button type="button" onclick="cancelImportReview()" class="bg-gray-700 hover:bg-gray-600 text-white font-semibold px-4 py-2 rounded-lg transition">Cancel Import</button>
+                </div>
+            </div>
+
+            <div id="pantryList" class="mt-6 space-y-4"></div>
+        </section>
+
+        <!-- Shopping List -->
+        <section id="shoppingListSection" class="hidden mt-6 rounded-2xl border border-gray-800 bg-gray-900/70 p-5 sm:p-6 shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Shopping List</h2>
+                    <p class="text-sm text-gray-400 mt-1">Ingredients you need to buy to make your saved recipes.</p>
+                </div>
+                <button onclick="loadShoppingList()" class="text-xs text-purple-400 hover:text-purple-300 transition">Refresh</button>
+            </div>
+            <div id="shoppingListContent">
+                <p class="text-gray-500 text-sm">Loading…</p>
+            </div>
+        </section>
+
+        <div id="textImportModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="w-full max-w-3xl rounded-2xl border border-gray-700 bg-gray-900 shadow-2xl">
+                <div class="flex items-start justify-between gap-4 border-b border-gray-800 px-5 py-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Import with Text Field</h2>
+                        <p class="mt-1 text-sm text-gray-400">Paste your data below, then choose how each property is separated.</p>
+                    </div>
+                    <button type="button" onclick="closeTextImportModal()" class="rounded-lg px-2 py-1 text-gray-400 hover:text-white hover:bg-gray-800 transition" aria-label="Close text import modal">✕</button>
+                </div>
+
+                <div class="p-5 space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2" for="textImportInput">Paste data</label>
+                        <textarea id="textImportInput" rows="12" class="w-full rounded-xl border border-gray-700 bg-gray-950 px-4 py-3 text-sm text-white outline-none focus:border-sky-500" placeholder="Eggs,9,Count,03/29/2026&#10;Milk,1,Gallon,04/12/2026&#10;Banana,2,Count"></textarea>
+                        <p class="mt-2 text-xs text-gray-500">Each row should contain item, quantity, unit, and optional expiration date.</p>
+                    </div>
+
+                    <div class="grid gap-5 md:grid-cols-2">
+                        <div class="rounded-xl border border-gray-800 bg-gray-950 p-4">
+                            <p class="text-sm font-semibold text-gray-200">Between properties</p>
+                            <div class="mt-3 space-y-3 text-sm text-gray-300">
+                                <label class="flex items-center gap-2"><input type="radio" name="textFieldDelimiter" value="tab" checked class="accent-sky-500"> Tab</label>
+                                <label class="flex items-center gap-2"><input type="radio" name="textFieldDelimiter" value="comma" class="accent-sky-500"> Comma</label>
+                                <label class="flex items-center gap-2"><input type="radio" name="textFieldDelimiter" value="space" class="accent-sky-500"> Space</label>
+                                <label class="flex items-center gap-2"><input type="radio" name="textFieldDelimiter" value="semicolon" class="accent-sky-500"> Semicolon</label>
+                                <label class="flex items-center gap-2">
+                                    <input type="radio" name="textFieldDelimiter" value="custom" class="accent-sky-500">
+                                    <span>Custom</span>
+                                    <input id="customTextFieldDelimiter" type="text" maxlength="6" placeholder="|" class="ml-2 w-24 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-sky-500" />
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-gray-800 bg-gray-950 p-4">
+                            <p class="text-sm font-semibold text-gray-200">Between rows</p>
+                            <div class="mt-3 space-y-3 text-sm text-gray-300">
+                                <label class="flex items-center gap-2"><input type="radio" name="textRowDelimiter" value="newline" checked class="accent-sky-500"> New line</label>
+                                <label class="flex items-center gap-2"><input type="radio" name="textRowDelimiter" value="doubleNewline" class="accent-sky-500"> Blank line</label>
+                                <label class="flex items-center gap-2"><input type="radio" name="textRowDelimiter" value="semicolon" class="accent-sky-500"> Semicolon</label>
+                                <label class="flex items-center gap-2">
+                                    <input type="radio" name="textRowDelimiter" value="custom" class="accent-sky-500">
+                                    <span>Custom</span>
+                                    <input id="customTextRowDelimiter" type="text" maxlength="6" placeholder="/" class="ml-2 w-24 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white outline-none focus:border-sky-500" />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3">
+                        <button type="button" onclick="processTextImport()" class="rounded-lg bg-sky-600 px-4 py-2 font-semibold text-white hover:bg-sky-700 transition">Preview Import</button>
+                        <button type="button" onclick="closeTextImportModal()" class="rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 font-semibold text-white hover:bg-gray-800 transition">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="addItemModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-gray-800 border border-gray-700 w-full max-w-md rounded-xl shadow-2xl p-8 relative">
+                <button onclick="closeAddItemModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+
+                <h2 id="addItemModalTitle" class="text-3xl font-bold text-white mb-6 text-center">Add Item</h2>
+
+                <form id="addItemForm" action="#" class="space-y-4">
+                    <div class="relative">
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Item Name</label>
+                        <input id="itemName" name="itemName" required aria-autocomplete="list" aria-controls="suggestions" autocomplete="off" class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+                        <div id="suggestions" class="absolute left-0 right-0 z-50 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg max-h-48 overflow-auto hidden text-white"></div>
+                        <p id="itemError" class="hidden text-red-400 text-sm mt-2" role="alert">Please select an item from the list.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Quantity</label>
+                        <input id="itemQuantity" type="number" min="0.01" step="0.01" name="quantity" value="1" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Unit</label>
+                        <select id="itemUnit" name="unit" class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+                            <option>Count</option>
+                            <option>Gallon</option>
+                            <option>Liter</option>
+                            <option>Pound</option>
+                            <option>Ounce</option>
+                            <option>Bag</option>
+                            <option>Box</option>
+                            <option>Can</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Expiration Date</label>
+                        <input id="itemExpiration" type="date" name="expiration" class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <button id="addItemSubmitBtn" type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition shadow">Add Item</button>
+                        <button type="button" onclick="closeAddItemModal()" class="text-gray-400 hover:text-white">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Auth modal (login + register tabs) — wired by auth.js -->
+    <div id="authModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-800 border border-gray-700 w-full max-w-md rounded-xl shadow-2xl p-8 relative">
+
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+
+            <div class="flex border-b border-gray-700 mb-6">
+                <button id="tabLogin" onclick="showLoginTab()" class="flex-1 py-2 text-sm font-medium border-b-2 border-purple-500 text-white transition">Sign In</button>
+                <button id="tabRegister" onclick="showRegisterTab()" class="flex-1 py-2 text-sm font-medium border-b-2 border-transparent text-gray-400 transition">Create Account</button>
+            </div>
+
+            <p id="authError" class="hidden text-red-400 text-sm mb-4"></p>
+
+            <form id="loginForm" onsubmit="submitLogin(event)" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Email or Username</label>
+                    <input id="loginIdentifier" type="text" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Password</label>
+                    <input id="loginPassword" type="password" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+                </div>
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition shadow-lg">Sign In</button>
+                <p class="text-center text-gray-400 text-sm">No account? <button type="button" onclick="showRegisterTab()" class="text-purple-400 hover:underline">Create one</button></p>
+            </form>
+
+            <form id="registerForm" onsubmit="submitRegister(event)" class="hidden space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Username</label>
+                    <input id="regUsername" type="text" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                    <input id="regEmail" type="email" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-2">Password</label>
+                    <input id="regPassword" type="password" required class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition">
+                </div>
+                <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition shadow-lg">Create Account</button>
+                <p class="text-center text-gray-400 text-sm">Already have one? <button type="button" onclick="showLoginTab()" class="text-purple-400 hover:underline">Sign in</button></p>
+            </form>
+        </div>
+    </div>
+
+    <!--Pantry list and modal actions-->
+    <script>
+        let pantryItems = [];
+        let editingItemIndex = null;
+        let allowedItems = [];
+        let pendingImportReview = null;
+        const CANONICAL_UNITS = ['Count', 'Gallon', 'Liter', 'Pound', 'Ounce', 'Bag', 'Box', 'Can'];
+
+        function openAddItemModal() {
+            const modal = document.getElementById('addItemModal');
+            if (modal) {
+                editingItemIndex = null;
+                const form = document.getElementById('addItemForm');
+                if (form) form.reset();
+                const itemName = document.getElementById('itemName');
+                if (itemName) {
+                    itemName.readOnly = false;
+                    itemName.classList.remove('opacity-70', 'cursor-not-allowed');
+                }
+                const qty = document.getElementById('itemQuantity');
+                if (qty) qty.value = '1';
+                const unit = document.getElementById('itemUnit');
+                if (unit) unit.value = 'Count';
+                const title = document.getElementById('addItemModalTitle');
+                if (title) title.textContent = 'Add Item';
+                const submitBtn = document.getElementById('addItemSubmitBtn');
+                if (submitBtn) submitBtn.textContent = 'Add Item';
+                modal.classList.remove('hidden');
+                const firstInput = document.getElementById('itemName');
+                if (firstInput) firstInput.focus();
+            }
+        }
+
+        function closeAddItemModal() {
+            const modal = document.getElementById('addItemModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+            const error = document.getElementById('itemError');
+            if (error) {
+                error.classList.add('hidden');
+            }
+        }
+
+        function showImportFeedback(message, isError, details) {
+            const feedback = document.getElementById('importFeedback');
+            if (!feedback) return;
+            feedback.classList.remove('hidden', 'border-red-600/60', 'bg-red-900/20', 'text-red-200', 'border-green-600/60', 'bg-green-900/20', 'text-green-200');
+            if (isError) {
+                feedback.classList.add('border-red-600/60', 'bg-red-900/20', 'text-red-200');
+            } else {
+                feedback.classList.add('border-green-600/60', 'bg-green-900/20', 'text-green-200');
+            }
+            const detailText = details && details.length ? '\n' + details.join('\n') : '';
+            feedback.textContent = message + detailText;
+        }
+
+        function hideImportReviewPanel() {
+            const panel = document.getElementById('importReviewPanel');
+            if (panel) panel.classList.add('hidden');
+            const summary = document.getElementById('importReviewSummary');
+            if (summary) summary.textContent = '';
+            const list = document.getElementById('importReviewList');
+            if (list) list.innerHTML = '';
+        }
+
+        function importItems() {
+            const input = document.getElementById('csvImportInput');
+            if (!input) return;
+            pendingImportReview = null;
+            hideImportReviewPanel();
+            input.value = '';
+            input.click();
+        }
+
+        function openTextImportModal() {
+            pendingImportReview = null;
+            hideImportReviewPanel();
+            const modal = document.getElementById('textImportModal');
+            const textarea = document.getElementById('textImportInput');
+            if (textarea) textarea.value = '';
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeTextImportModal() {
+            const modal = document.getElementById('textImportModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function getSelectedImportOption(name) {
+            const checked = document.querySelector('input[name="' + name + '"]:checked');
+            return checked ? checked.value : '';
+        }
+
+        function getCustomDelimiter(inputId, fallback) {
+            const input = document.getElementById(inputId);
+            const value = input ? input.value : '';
+            return value ? value : fallback;
+        }
+
+        function splitImportRows(text, rowMode) {
+            const value = String(text || '').trim();
+            if (!value) return [];
+            if (rowMode === 'doubleNewline') {
+                return value.split(/\n\s*\n+/).map((row) => row.trim()).filter(Boolean);
+            }
+            if (rowMode === 'semicolon') {
+                return value.split(/;+/).map((row) => row.trim()).filter(Boolean);
+            }
+            if (rowMode === 'custom') {
+                const delimiter = getCustomDelimiter('customTextRowDelimiter', '\n');
+                return delimiter === '\n'
+                    ? value.split(/\r?\n/).map((row) => row.trim()).filter(Boolean)
+                    : value.split(delimiter).map((row) => row.trim()).filter(Boolean);
+            }
+            return value.split(/\r?\n/).map((row) => row.trim()).filter(Boolean);
+        }
+
+        function splitImportFields(row, fieldMode) {
+            const clean = String(row || '').trim();
+            if (!clean) return [];
+
+            let delimiter = ',';
+            if (fieldMode === 'tab') delimiter = '\t';
+            else if (fieldMode === 'semicolon') delimiter = ';';
+            else if (fieldMode === 'space') delimiter = ' ';
+            else if (fieldMode === 'custom') delimiter = getCustomDelimiter('customTextFieldDelimiter', ',');
+
+            const values = [];
+            let current = '';
+            let inQuotes = false;
+            let i = 0;
+
+            while (i < clean.length) {
+                const ch = clean[i];
+
+                if (ch === '"') {
+                    if (inQuotes && clean[i + 1] === '"') {
+                        current += '"';
+                        i += 2;
+                        continue;
+                    }
+                    inQuotes = !inQuotes;
+                    i += 1;
+                    continue;
+                }
+
+                if (!inQuotes) {
+                    if (fieldMode === 'space') {
+                        if (/\s/.test(ch)) {
+                            if (current.trim().length || values.length) {
+                                values.push(current.trim());
+                                current = '';
+                            }
+                            while (i < clean.length && /\s/.test(clean[i])) i += 1;
+                            continue;
+                        }
+                    } else if (clean.slice(i, i + delimiter.length) === delimiter) {
+                        values.push(current.trim());
+                        current = '';
+                        i += delimiter.length;
+                        continue;
+                    }
+                }
+
+                current += ch;
+                i += 1;
+            }
+
+            if (current.length || values.length) values.push(current.trim());
+            return values.filter((entry) => entry.length > 0 || values.length === 1);
+        }
+
+        function textImportToCsv(text) {
+            const rowMode = getSelectedImportOption('textRowDelimiter');
+            const fieldMode = getSelectedImportOption('textFieldDelimiter');
+            const rows = splitImportRows(text, rowMode);
+            const csvRows = [];
+
+            rows.forEach((row) => {
+                const fields = splitImportFields(row, fieldMode);
+                if (!fields.length) return;
+                csvRows.push(fields.map((field) => '"' + String(field).replace(/"/g, '""') + '"').join(','));
+            });
+
+            return csvRows.join('\n');
+        }
+
+        async function processTextImport() {
+            const textarea = document.getElementById('textImportInput');
+            const raw = textarea ? textarea.value : '';
+            const converted = textImportToCsv(raw);
+            if (!converted.trim()) {
+                showImportFeedback('Import failed: paste some data before previewing.', true);
+                return;
+            }
+
+            closeTextImportModal();
+            await processCsvImport(converted);
+        }
+
+        function normalizeHeader(header) {
+            return String(header || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ');
+        }
+
+        function parseCsvLine(line) {
+            const values = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i += 1) {
+                const ch = line[i];
+                if (ch === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        current += '"';
+                        i += 1;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (ch === ',' && !inQuotes) {
+                    values.push(current.trim());
+                    current = '';
+                } else {
+                    current += ch;
+                }
+            }
+
+            values.push(current.trim());
+            return values;
+        }
+
+        function normalizeUnit(unit) {
+            const map = {
+                count: 'Count', counts: 'Count', ct: 'Count',
+                gallon: 'Gallon', gallons: 'Gallon', gal: 'Gallon',
+                liter: 'Liter', liters: 'Liter', l: 'Liter',
+                pound: 'Pound', pounds: 'Pound', lb: 'Pound', lbs: 'Pound',
+                ounce: 'Ounce', ounces: 'Ounce', oz: 'Ounce',
+                bag: 'Bag', bags: 'Bag',
+                box: 'Box', boxes: 'Box',
+                can: 'Can', cans: 'Can'
+            };
+            const key = String(unit || '').trim().toLowerCase();
+            if (!key) return 'Count';
+            return map[key] || null;
+        }
+
+        function levenshteinDistance(a, b) {
+            const left = String(a || '').toLowerCase();
+            const right = String(b || '').toLowerCase();
+            const matrix = Array.from({ length: left.length + 1 }, () => Array(right.length + 1).fill(0));
+
+            for (let i = 0; i <= left.length; i += 1) matrix[i][0] = i;
+            for (let j = 0; j <= right.length; j += 1) matrix[0][j] = j;
+
+            for (let i = 1; i <= left.length; i += 1) {
+                for (let j = 1; j <= right.length; j += 1) {
+                    const cost = left[i - 1] === right[j - 1] ? 0 : 1;
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j] + 1,
+                        matrix[i][j - 1] + 1,
+                        matrix[i - 1][j - 1] + cost
+                    );
+                }
+            }
+
+            return matrix[left.length][right.length];
+        }
+
+        function similarityScore(a, b) {
+            const left = String(a || '').trim();
+            const right = String(b || '').trim();
+            if (!left || !right) return 0;
+            const distance = levenshteinDistance(left, right);
+            return 1 - (distance / Math.max(left.length, right.length));
+        }
+
+        function findBestMatch(query, candidates) {
+            let best = null;
+            for (const candidate of candidates) {
+                const score = similarityScore(query, candidate);
+                if (!best || score > best.score) {
+                    best = { candidate, score };
+                }
+            }
+            return best;
+        }
+
+        function topMatches(query, candidates, limit) {
+            return candidates
+                .map((candidate) => ({ candidate, score: similarityScore(query, candidate) }))
+                .sort((a, b) => b.score - a.score)
+                .slice(0, limit)
+                .filter((entry) => entry.score > 0)
+                .map((entry) => entry.candidate);
+        }
+
+        function isValidDateParts(year, month, day) {
+            const y = Number(year);
+            const m = Number(month);
+            const d = Number(day);
+            if (!Number.isInteger(y) || !Number.isInteger(m) || !Number.isInteger(d)) return false;
+            if (m < 1 || m > 12 || d < 1 || d > 31) return false;
+            const dt = new Date(y, m - 1, d);
+            return dt.getFullYear() === y && dt.getMonth() === (m - 1) && dt.getDate() === d;
+        }
+
+        function resolveItemName(rawName, rowNumber) {
+            const clean = String(rawName || '').trim();
+            if (!clean) {
+                return { status: 'reject', reason: 'Row ' + rowNumber + ': missing item name' };
+            }
+
+            const lowered = clean.toLowerCase();
+            const exact = allowedItems.find((it) => it.toLowerCase() === lowered);
+            if (exact) {
+                return { status: 'accept', value: exact };
+            }
+
+            const stemmed = lowered.replace(/s$/, '');
+            const stemMatch = allowedItems.find((it) => it.toLowerCase().replace(/s$/, '') === stemmed);
+            if (stemMatch) {
+                const options = topMatches(clean, allowedItems, 6);
+                if (!options.includes(stemMatch)) options.unshift(stemMatch);
+                return {
+                    status: 'review',
+                    suggested: stemMatch,
+                    options,
+                    reason: 'Row ' + rowNumber + ': confirm item for "' + clean + '"'
+                };
+            }
+
+            const best = findBestMatch(clean, allowedItems);
+            if (best && best.score >= 0.8) {
+                const options = topMatches(clean, allowedItems, 6);
+                if (!options.includes(best.candidate)) options.unshift(best.candidate);
+                return {
+                    status: 'review',
+                    suggested: best.candidate,
+                    options,
+                    reason: 'Row ' + rowNumber + ': confirm item for "' + clean + '"'
+                };
+            }
+
+            return { status: 'reject', reason: 'Row ' + rowNumber + ': unknown item "' + clean + '"' };
+        }
+
+        function resolveUnit(rawUnit, rowNumber) {
+            const clean = String(rawUnit || '').trim();
+            const normalized = normalizeUnit(clean || 'Count');
+            if (normalized) {
+                return { status: 'accept', value: normalized };
+            }
+
+            const best = findBestMatch(clean, CANONICAL_UNITS);
+            if (best && best.score >= 0.75) {
+                const options = topMatches(clean, CANONICAL_UNITS, 4);
+                if (!options.includes(best.candidate)) options.unshift(best.candidate);
+                return {
+                    status: 'review',
+                    suggested: best.candidate,
+                    options,
+                    reason: 'Row ' + rowNumber + ': confirm unit for "' + clean + '"'
+                };
+            }
+
+            return { status: 'reject', reason: 'Row ' + rowNumber + ': invalid unit "' + clean + '"' };
+        }
+
+        function resolveExpiration(rawDate, rowNumber) {
+            const value = String(rawDate || '').trim();
+            if (!value) {
+                return { status: 'accept', value: 'Not set' };
+            }
+
+            if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                const parts = value.split('-');
+                if (!isValidDateParts(parts[0], parts[1], parts[2])) {
+                    return { status: 'reject', reason: 'Row ' + rowNumber + ': invalid expiration date "' + value + '"' };
+                }
+                return { status: 'accept', value: toDisplayDate(value) };
+            }
+
+            if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(value)) {
+                const parts = value.split('/');
+                const first = Number(parts[0]);
+                const second = Number(parts[1]);
+                const year = parts[2];
+
+                if (first <= 12 && second <= 12) {
+                    const mmdd = year + '-' + String(first).padStart(2, '0') + '-' + String(second).padStart(2, '0');
+                    const ddmm = year + '-' + String(second).padStart(2, '0') + '-' + String(first).padStart(2, '0');
+                    if (!isValidDateParts(year, first, second) || !isValidDateParts(year, second, first)) {
+                        return { status: 'reject', reason: 'Row ' + rowNumber + ': invalid expiration date "' + value + '"' };
+                    }
+                    return {
+                        status: 'review',
+                        suggested: mmdd,
+                        options: [
+                            { value: mmdd, label: value + ' as MM/DD/YYYY' },
+                            { value: ddmm, label: value + ' as DD/MM/YYYY' },
+                            { value: '', label: 'No expiration date' }
+                        ],
+                        reason: 'Row ' + rowNumber + ': confirm ambiguous expiration "' + value + '"'
+                    };
+                }
+
+                if (first > 12 && second <= 12) {
+                    if (!isValidDateParts(year, second, first)) {
+                        return { status: 'reject', reason: 'Row ' + rowNumber + ': invalid expiration date "' + value + '"' };
+                    }
+                    const converted = year + '-' + String(second).padStart(2, '0') + '-' + String(first).padStart(2, '0');
+                    return {
+                        status: 'review',
+                        suggested: converted,
+                        options: [
+                            { value: converted, label: value + ' as DD/MM/YYYY' },
+                            { value: '', label: 'No expiration date' }
+                        ],
+                        reason: 'Row ' + rowNumber + ': confirm expiration format for "' + value + '"'
+                    };
+                }
+
+                if (first <= 12 && second > 12) {
+                    if (!isValidDateParts(year, first, second)) {
+                        return { status: 'reject', reason: 'Row ' + rowNumber + ': invalid expiration date "' + value + '"' };
+                    }
+                    return { status: 'accept', value: toDisplayDate(year + '-' + String(first).padStart(2, '0') + '-' + String(second).padStart(2, '0')) };
+                }
+            }
+
+            return { status: 'reject', reason: 'Row ' + rowNumber + ': invalid expiration date "' + value + '"' };
+        }
+
+        async function appendImportedRows(rows) {
+            let savedToServer = false;
+            try {
+                for (const row of rows) {
+                    const isoDate = toInputDate(row.expiration);
+                    const body = {
+                        itemName: row.name,
+                        quantity: parseFloat(row.quantity) || 1,
+                        unit: row.unit || 'Count',
+                        expirationDate: isoDate || null
+                    };
+                    const res = await fetch(`${API}/api/member/pantry/add`, {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+                    if (res.status === 401) break;
+                    if (res.ok) savedToServer = true;
+                }
+            } catch (_) {}
+
+            if (savedToServer) {
+                await loadPantry();
+            } else {
+                for (let i = rows.length - 1; i >= 0; i -= 1) {
+                    pantryItems.unshift(rows[i]);
+                }
+                renderPantryList();
+            }
+        }
+
+        function renderImportReviewPanel() {
+            const panel = document.getElementById('importReviewPanel');
+            const summary = document.getElementById('importReviewSummary');
+            const list = document.getElementById('importReviewList');
+            if (!panel || !summary || !list || !pendingImportReview) return;
+
+            const context = pendingImportReview;
+            summary.textContent = 'Auto-accepted ' + context.acceptedRows.length + ' row(s). Review ' + context.reviewRows.length + ' row(s) before applying.';
+            list.innerHTML = '';
+
+            context.reviewRows.forEach((row, index) => {
+                const card = document.createElement('div');
+                card.className = 'rounded-lg border border-amber-500/30 bg-gray-900/60 p-3';
+
+                const title = document.createElement('p');
+                title.className = 'text-sm font-semibold text-amber-100';
+                title.textContent = 'Row ' + row.rowNumber + ': ' + row.rawName + ' (' + row.quantity + ')';
+                card.appendChild(title);
+
+                const includeWrap = document.createElement('label');
+                includeWrap.className = 'mt-2 flex items-center gap-2 text-xs text-gray-300';
+                includeWrap.innerHTML = '<input type="checkbox" id="review-include-' + index + '" class="rounded border-gray-600 bg-gray-800" checked> Include this row';
+                card.appendChild(includeWrap);
+
+                const grid = document.createElement('div');
+                grid.className = 'mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2';
+
+                const itemField = document.createElement('div');
+                itemField.innerHTML = '<p class="text-xs text-gray-400 mb-1">Item</p>';
+                if (row.item.status === 'review') {
+                    const select = document.createElement('select');
+                    select.id = 'review-item-' + index;
+                    select.className = 'w-full bg-gray-800 border border-gray-700 rounded-md px-2 py-1 text-sm text-white';
+                    row.item.options.forEach((opt) => {
+                        const option = document.createElement('option');
+                        option.value = opt;
+                        option.textContent = opt;
+                        if (opt === row.item.suggested) option.selected = true;
+                        select.appendChild(option);
+                    });
+                    itemField.appendChild(select);
+                } else {
+                    const p = document.createElement('p');
+                    p.className = 'text-sm text-white';
+                    p.textContent = row.item.value;
+                    itemField.appendChild(p);
+                }
+                grid.appendChild(itemField);
+
+                const unitField = document.createElement('div');
+                unitField.innerHTML = '<p class="text-xs text-gray-400 mb-1">Unit</p>';
+                if (row.unit.status === 'review') {
+                    const select = document.createElement('select');
+                    select.id = 'review-unit-' + index;
+                    select.className = 'w-full bg-gray-800 border border-gray-700 rounded-md px-2 py-1 text-sm text-white';
+                    row.unit.options.forEach((opt) => {
+                        const option = document.createElement('option');
+                        option.value = opt;
+                        option.textContent = opt;
+                        if (opt === row.unit.suggested) option.selected = true;
+                        select.appendChild(option);
+                    });
+                    unitField.appendChild(select);
+                } else {
+                    const p = document.createElement('p');
+                    p.className = 'text-sm text-white';
+                    p.textContent = row.unit.value;
+                    unitField.appendChild(p);
+                }
+                grid.appendChild(unitField);
+
+                const dateField = document.createElement('div');
+                dateField.innerHTML = '<p class="text-xs text-gray-400 mb-1">Expiration</p>';
+                if (row.expiration.status === 'review') {
+                    const select = document.createElement('select');
+                    select.id = 'review-expiration-' + index;
+                    select.className = 'w-full bg-gray-800 border border-gray-700 rounded-md px-2 py-1 text-sm text-white';
+                    row.expiration.options.forEach((opt) => {
+                        const option = document.createElement('option');
+                        option.value = opt.value;
+                        option.textContent = opt.label;
+                        if (opt.value === row.expiration.suggested) option.selected = true;
+                        select.appendChild(option);
+                    });
+                    dateField.appendChild(select);
+                } else {
+                    const p = document.createElement('p');
+                    p.className = 'text-sm text-white';
+                    p.textContent = row.expiration.value;
+                    dateField.appendChild(p);
+                }
+                grid.appendChild(dateField);
+
+                card.appendChild(grid);
+                list.appendChild(card);
+            });
+
+            panel.classList.remove('hidden');
+        }
+
+        async function applyImportReview() {
+            if (!pendingImportReview) return;
+            const context = pendingImportReview;
+            const finalRows = context.acceptedRows.slice();
+            const skippedDetails = context.skippedDetails.slice();
+            let skippedCount = context.skippedCount;
+            let verifiedCount = 0;
+
+            context.reviewRows.forEach((row, index) => {
+                const include = document.getElementById('review-include-' + index);
+                if (!include || !include.checked) {
+                    skippedCount += 1;
+                    skippedDetails.push('Row ' + row.rowNumber + ': skipped in review');
+                    return;
+                }
+
+                const itemValue = row.item.status === 'review'
+                    ? (document.getElementById('review-item-' + index) || {}).value
+                    : row.item.value;
+                const unitValue = row.unit.status === 'review'
+                    ? (document.getElementById('review-unit-' + index) || {}).value
+                    : row.unit.value;
+                const expirationInput = row.expiration.status === 'review'
+                    ? (document.getElementById('review-expiration-' + index) || {}).value
+                    : toInputDate(row.expiration.value);
+                const expirationValue = expirationInput ? toDisplayDate(expirationInput) : 'Not set';
+
+                if (!itemValue || !unitValue) {
+                    skippedCount += 1;
+                    skippedDetails.push('Row ' + row.rowNumber + ': missing reviewed values');
+                    return;
+                }
+
+                finalRows.push({
+                    name: itemValue,
+                    quantity: row.quantity,
+                    unit: unitValue,
+                    expiration: expirationValue
+                });
+                verifiedCount += 1;
+            });
+
+            if (!finalRows.length) {
+                pendingImportReview = null;
+                hideImportReviewPanel();
+                showImportFeedback('No rows were imported after review.', true, skippedDetails.slice(0, 6));
+                return;
+            }
+
+            await appendImportedRows(finalRows);
+            pendingImportReview = null;
+            hideImportReviewPanel();
+            const message = 'Imported ' + finalRows.length + ' row(s).' + (verifiedCount > 0 ? ' Reviewed ' + verifiedCount + ' row(s).' : '') + (skippedCount > 0 ? ' Skipped ' + skippedCount + ' row(s).' : '');
+            showImportFeedback(message, false, skippedDetails.slice(0, 6));
+        }
+
+        function cancelImportReview() {
+            pendingImportReview = null;
+            hideImportReviewPanel();
+            showImportFeedback('Import cancelled. No rows were added.', true);
+        }
+
+        async function processCsvImport(csvText) {
+            const lines = String(csvText || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+            if (lines.length < 2) {
+                showImportFeedback('Import failed: CSV must include a header row and at least one item row.', true);
+                return;
+            }
+
+            const headers = parseCsvLine(lines[0]).map(normalizeHeader);
+            const nameIdx = headers.findIndex((h) => ['item', 'item name', 'name'].includes(h));
+            const qtyIdx = headers.findIndex((h) => ['quantity', 'qty', 'owned'].includes(h));
+            const unitIdx = headers.findIndex((h) => ['unit', 'uom'].includes(h));
+            const expIdx = headers.findIndex((h) => ['expiration', 'expiration date', 'expires', 'expiry'].includes(h));
+
+            if (nameIdx === -1) {
+                showImportFeedback('Import failed: CSV header must include item name column (item, item name, or name).', true);
+                return;
+            }
+
+            const acceptedRows = [];
+            const reviewRows = [];
+            let skippedCount = 0;
+            const skippedDetails = [];
+
+            for (let i = 1; i < lines.length; i += 1) {
+                const rowNumber = i + 1;
+                const values = parseCsvLine(lines[i]);
+                const rawName = values[nameIdx] || '';
+                const itemResult = resolveItemName(rawName, rowNumber);
+                if (itemResult.status === 'reject') {
+                    skippedCount += 1;
+                    skippedDetails.push(itemResult.reason);
+                    continue;
+                }
+
+                const rawQuantity = qtyIdx >= 0 ? String(values[qtyIdx] || '').trim() : '1';
+                const parsedQuantity = Number(rawQuantity || '1');
+                if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
+                    skippedCount += 1;
+                    skippedDetails.push('Row ' + rowNumber + ': invalid quantity "' + rawQuantity + '"');
+                    continue;
+                }
+
+                const quantity = Number.isInteger(parsedQuantity) ? String(parsedQuantity) : String(parsedQuantity);
+                const unitResult = resolveUnit(unitIdx >= 0 ? values[unitIdx] : 'Count', rowNumber);
+                if (unitResult.status === 'reject') {
+                    skippedCount += 1;
+                    skippedDetails.push(unitResult.reason);
+                    continue;
+                }
+
+                const expirationResult = resolveExpiration(expIdx >= 0 ? values[expIdx] : '', rowNumber);
+                if (expirationResult.status === 'reject') {
+                    skippedCount += 1;
+                    skippedDetails.push(expirationResult.reason);
+                    continue;
+                }
+
+                if (itemResult.status === 'review' || unitResult.status === 'review' || expirationResult.status === 'review') {
+                    reviewRows.push({
+                        rowNumber,
+                        rawName: String(rawName || '').trim(),
+                        quantity,
+                        item: itemResult.status === 'review'
+                            ? { status: 'review', suggested: itemResult.suggested, options: itemResult.options || [itemResult.suggested] }
+                            : { status: 'accept', value: itemResult.value },
+                        unit: unitResult.status === 'review'
+                            ? { status: 'review', suggested: unitResult.suggested, options: unitResult.options || [unitResult.suggested] }
+                            : { status: 'accept', value: unitResult.value },
+                        expiration: expirationResult.status === 'review'
+                            ? { status: 'review', suggested: expirationResult.suggested, options: expirationResult.options || [{ value: expirationResult.suggested, label: 'Suggested date' }] }
+                            : { status: 'accept', value: expirationResult.value }
+                    });
+                } else {
+                    acceptedRows.push({
+                        name: itemResult.value,
+                        quantity,
+                        unit: unitResult.value,
+                        expiration: expirationResult.value
+                    });
+                }
+            }
+
+            if (!acceptedRows.length && !reviewRows.length) {
+                hideImportReviewPanel();
+                showImportFeedback('No rows were imported. Please review CSV values and try again.', true, skippedDetails.slice(0, 6));
+                return;
+            }
+
+            if (!reviewRows.length) {
+                await appendImportedRows(acceptedRows);
+                hideImportReviewPanel();
+                const details = skippedCount > 0 ? skippedDetails.slice(0, 6) : [];
+                const message = 'Imported ' + acceptedRows.length + ' row(s).' + (skippedCount > 0 ? ' Skipped ' + skippedCount + ' row(s).' : '');
+                showImportFeedback(message, false, details);
+                return;
+            }
+
+            pendingImportReview = {
+                acceptedRows,
+                reviewRows,
+                skippedCount,
+                skippedDetails
+            };
+            renderImportReviewPanel();
+            const message = 'Import ready for review: ' + acceptedRows.length + ' auto-accepted row(s), ' + reviewRows.length + ' row(s) need review.' + (skippedCount > 0 ? ' ' + skippedCount + ' row(s) rejected.' : '');
+            showImportFeedback(message, false, skippedDetails.slice(0, 6));
+        }
+
+        function handleCsvImportChange(event) {
+            const file = event.target && event.target.files ? event.target.files[0] : null;
+            if (!file) return;
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                showImportFeedback('Import failed: please choose a .csv file.', true);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(loadEvent) {
+                processCsvImport(loadEvent.target ? loadEvent.target.result : '');
+            };
+            reader.onerror = function() {
+                showImportFeedback('Import failed: unable to read file.', true);
+            };
+            reader.readAsText(file);
+        }
+
+        function toInputDate(displayDate) {
+            if (!displayDate || displayDate === 'Not set') return '';
+            const parts = displayDate.split('/');
+            if (parts.length !== 3) return '';
+            const month = parts[0].padStart(2, '0');
+            const day = parts[1].padStart(2, '0');
+            const year = parts[2];
+            return year + '-' + month + '-' + day;
+        }
+
+        function toDisplayDate(inputDate) {
+            if (!inputDate) return 'Not set';
+            return new Date(inputDate + 'T00:00:00').toLocaleDateString('en-US');
+        }
+
+        function openEditItemModal(index) {
+            const item = pantryItems[index];
+            if (!item) return;
+
+            editingItemIndex = index;
+
+            const title = document.getElementById('addItemModalTitle');
+            if (title) title.textContent = 'Edit Item';
+            const submitBtn = document.getElementById('addItemSubmitBtn');
+            if (submitBtn) submitBtn.textContent = 'Save Changes';
+
+            const itemName = document.getElementById('itemName');
+            if (itemName) {
+                itemName.value = item.name || '';
+                itemName.readOnly = true;
+                itemName.classList.add('opacity-70', 'cursor-not-allowed');
+            }
+            const qty = document.getElementById('itemQuantity');
+            if (qty) qty.value = item.quantity || '1';
+            const unit = document.getElementById('itemUnit');
+            if (unit) unit.value = item.unit || 'Count';
+            const expiration = document.getElementById('itemExpiration');
+            if (expiration) expiration.value = toInputDate(item.expiration);
+
+            const modal = document.getElementById('addItemModal');
+            if (modal) modal.classList.remove('hidden');
+            if (itemName) itemName.focus();
+        }
+
+        function pluralizeUnit(unit) {
+            if (!unit) return 'Counts';
+            if (unit.endsWith('s')) return unit;
+            return unit + 's';
+        }
+
+        function formatOwnedLabel(quantity, unit) {
+            const safeQuantity = quantity || '1';
+            const baseUnit = unit || 'Count';
+            const numericQuantity = Number(safeQuantity);
+            const isSingular = Number.isFinite(numericQuantity) && Math.abs(numericQuantity - 1) < 1e-9;
+            const displayUnit = isSingular ? baseUnit : pluralizeUnit(baseUnit);
+            return safeQuantity + ' ' + displayUnit;
+        }
+
+        function renderPantryList() {
+            const list = document.getElementById('pantryList');
+            if (!list) return;
+
+            list.innerHTML = '';
+
+            pantryItems.forEach((item, index) => {
+                const card = document.createElement('article');
+                card.className = 'rounded-2xl border border-gray-700 bg-gray-800/80 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4';
+                card.innerHTML = `
+                    <div class="space-y-1">
+                        <h3 class="text-xl font-semibold text-white">${item.name}</h3>
+                        <p class="text-sm text-gray-300">Expires: ${item.expiration || 'Not set'}</p>
+                        <p class="text-sm text-gray-300">Owned: ${formatOwnedLabel(item.quantity, item.unit)}</p>
+                    </div>
+                    <div class="flex sm:flex-col gap-2 sm:min-w-[120px] sm:items-end">
+                        <button type="button" data-remove-index="${index}" class="w-full sm:w-[92px] bg-red-500 hover:bg-red-600 text-white text-xs font-semibold px-3 py-2 rounded-full transition">Remove</button>
+                        <button type="button" data-edit-index="${index}" class="w-full sm:w-[92px] bg-gray-600 hover:bg-gray-500 text-white text-xs font-semibold px-3 py-2 rounded-full transition">Edit</button>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        async function removeItem(index) {
+            const item = pantryItems[index];
+            if (item && item.id) {
+                try {
+                    await fetch(`${API}/api/member/pantry/${item.id}`, {
+                        method: 'DELETE', credentials: 'include'
+                    });
+                } catch (e) { /* ignore network errors */ }
+            }
+            pantryItems.splice(index, 1);
+            renderPantryList();
+        }
+
+        function editItem(index) {
+            openEditItemModal(index);
+        }
+
+        const API = 'http://localhost:8080/smartpantry';
+
+        async function loadPantry() {
+            try {
+                const res = await fetch(`${API}/api/member/pantry`, { credentials: 'include' });
+                if (!res.ok) return;
+                const json = await res.json();
+                const rows = json.data || [];
+                pantryItems = rows.map(r => ({
+                    id: r.id,
+                    name: r.ingredientName || r.ingredientId,
+                    expiration: r.expirationDate || '',
+                    quantity: String(r.quantity),
+                    unit: r.unit || 'Count'
+                }));
+                document.getElementById('guestBanner')?.classList.add('hidden');
+                renderPantryList();
+            } catch (e) { /* server not running */ }
+        }
+
+        async function loadShoppingList() {
+            const section = document.getElementById('shoppingListSection');
+            const content = document.getElementById('shoppingListContent');
+            content.innerHTML = '<p class="text-gray-500 text-sm">Loading…</p>';
+            try {
+                const res = await fetch(`${API}/api/member/shopping-list`, { credentials: 'include' });
+                if (!res.ok) { content.innerHTML = '<p class="text-gray-500 text-sm">Could not load shopping list.</p>'; return; }
+                const json = await res.json();
+                const items = json.data || [];
+                if (!items.length) {
+                    content.innerHTML = '<p class="text-gray-400 text-sm">Nothing to buy — your pantry covers all your saved recipes!</p>';
+                } else {
+                    content.innerHTML = `
+                        <ul class="divide-y divide-gray-800">
+                            ${items.map(i => `
+                                <li class="flex items-center justify-between py-3">
+                                    <span class="text-white text-sm font-medium capitalize">${i.ingredientName}</span>
+                                    <span class="text-gray-400 text-sm">${i.quantity} ${i.unit || ''}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                        <p class="mt-3 text-xs text-gray-500">${items.length} item${items.length !== 1 ? 's' : ''} needed across your saved recipes.</p>
+                    `;
+                }
+            } catch (_) {
+                content.innerHTML = '<p class="text-red-400 text-sm">Could not reach server.</p>';
+            }
+        }
+
+        function setPantryActionsEnabled(enabled) {
+            ['addItemBtn', 'importCsvBtn', 'importTextBtn'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.disabled = !enabled;
+            });
+        }
+
+        window.onAuthLogin = function() {
+            setPantryActionsEnabled(true);
+            loadPantry();
+            document.getElementById('guestBanner')?.classList.add('hidden');
+            document.getElementById('shoppingListSection')?.classList.remove('hidden');
+            loadShoppingList();
+        };
+        window.onAuthLogout = function() {
+            setPantryActionsEnabled(false);
+            pantryItems = [];
+            renderPantryList();
+            document.getElementById('guestBanner')?.classList.remove('hidden');
+            document.getElementById('shoppingListSection')?.classList.add('hidden');
+        };
+
+        // Close add-item modal on outside click (auth modal outside-click handled by auth.js)
+        window.addEventListener('click', function(event) {
+            const addModal = document.getElementById('addItemModal');
+            if (event.target === addModal) {
+                closeAddItemModal();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const csvInput = document.getElementById('csvImportInput');
+            if (csvInput) {
+                csvInput.addEventListener('change', handleCsvImportChange);
+            }
+
+            const addItemForm = document.getElementById('addItemForm');
+            const itemNameInput = document.getElementById('itemName');
+            const itemQtyInput = document.getElementById('itemQuantity');
+            const itemUnitInput = document.getElementById('itemUnit');
+            const itemExpirationInput = document.getElementById('itemExpiration');
+            const itemErrorEl = document.getElementById('itemError');
+            const pantryList = document.getElementById('pantryList');
+            let items = [];
+
+            // ingredientList: array of { id, name } loaded from backend
+            let ingredientList = [];
+            let selectedIngredientId = null;
+
+            const FALLBACK_ITEMS = [
+                'Eggs', 'Milk', 'Butter', 'Flour', 'Sugar', 'Salt', 'Olive Oil', 'Tomatoes', 'Onions',
+                'Garlic', 'Cheese', 'Yogurt', 'Chicken', 'Beef', 'Pasta', 'Rice', 'Bread', 'Coffee',
+                'Tea', 'Honey', 'Lemon', 'Potato', 'Carrot', 'Bell Pepper', 'Cucumber', 'Spinach',
+                'Apple', 'Banana', 'Orange', 'Mushrooms'
+            ];
+
+            // Load ingredient catalog from backend; fall back to hardcoded list if unavailable
+            fetch(`${API}/api/ingredients`, { credentials: 'include' })
+                .then(r => r.json())
+                .then(j => {
+                    const rows = Array.isArray(j.data) ? j.data : [];
+                    if (rows.length) {
+                        ingredientList = rows.map(r => ({ id: r.id, name: r.name }));
+                        allowedItems = rows.map(r => r.name);
+                        items = allowedItems.slice();
+                    }
+                })
+                .catch(() => {
+                    ingredientList = FALLBACK_ITEMS.map(n => ({ id: null, name: n }));
+                    allowedItems = FALLBACK_ITEMS.slice();
+                    items = allowedItems.slice();
+                });
+
+            // Use fallback immediately so the dropdown works before the API responds
+            ingredientList = FALLBACK_ITEMS.map(n => ({ id: null, name: n }));
+            items = FALLBACK_ITEMS.slice();
+            allowedItems = items.slice();
+
+            const floating = document.createElement('div');
+            floating.className = 'bg-gray-800 border border-gray-700 rounded-lg max-h-48 overflow-auto text-white';
+            floating.style.position = 'absolute';
+            floating.style.boxSizing = 'border-box';
+            floating.style.minWidth = '120px';
+            floating.style.maxWidth = '600px';
+            floating.style.padding = '2px';
+            floating.style.zIndex = '9999';
+            floating.style.display = 'none';
+            floating.style.pointerEvents = 'auto';
+            document.body.appendChild(floating);
+
+            function setPos() {
+                if (!itemNameInput) return;
+                const rect = itemNameInput.getBoundingClientRect();
+                floating.style.left = (rect.left + window.scrollX) + 'px';
+                floating.style.top = (rect.bottom + window.scrollY) + 'px';
+                floating.style.width = rect.width + 'px';
+            }
+            window.addEventListener('resize', setPos);
+            window.addEventListener('scroll', setPos, true);
+
+            // each entry: { id, name, synonymOf? }
+            function renderSuggestions(list) {
+                floating.innerHTML = '';
+                if (!list || !list.length) { floating.style.display = 'none'; return; }
+                floating.style.display = 'block';
+                list.forEach((it) => {
+                    const row = document.createElement('div');
+                    row.className = 'px-3 py-2 cursor-pointer hover:bg-gray-700 flex items-center justify-between gap-2';
+                    row.dataset.name = it.name;
+                    row.dataset.id = it.id || '';
+                    const nameEl = document.createElement('span');
+                    nameEl.textContent = it.name;
+                    row.appendChild(nameEl);
+                    if (it.synonymOf) {
+                        const hint = document.createElement('span');
+                        hint.className = 'text-xs text-gray-400 shrink-0';
+                        hint.textContent = `← "${it.synonymOf}"`;
+                        row.appendChild(hint);
+                    }
+                    row.addEventListener('mousedown', (ev) => {
+                        ev.preventDefault();
+                        itemNameInput.value = it.name;
+                        selectedIngredientId = it.id || null;
+                        floating.style.display = 'none';
+                        itemNameInput.focus();
+                    });
+                    floating.appendChild(row);
+                });
+            }
+
+            setPos();
+            let selected = -1;
+            let resolveTimer = null;
+
+            function showSuggestionsFor(q) {
+                if (!q) { floating.style.display = 'none'; return; }
+                const direct = ingredientList.filter(it => it.name.toLowerCase().includes(q)).slice(0, 8);
+                setPos();
+                renderSuggestions(direct);
+                selected = -1;
+
+                // If fewer than 3 direct matches, also check synonyms via backend resolve
+                clearTimeout(resolveTimer);
+                if (direct.length < 3) {
+                    resolveTimer = setTimeout(async () => {
+                        try {
+                            const r = await fetch(`${API}/api/ingredients?resolve=${encodeURIComponent(q)}`);
+                            const j = await r.json();
+                            const d = j.data;
+                            if (d && d.id && !d.exact) {
+                                const alreadyShown = direct.some(it => it.name.toLowerCase() === d.canonical.toLowerCase());
+                                if (!alreadyShown) {
+                                    renderSuggestions([...direct, { id: d.id, name: d.canonical, synonymOf: q }]);
+                                }
+                            }
+                        } catch (_) {}
+                    }, 300);
+                }
+            }
+
+            if (itemNameInput) {
+                itemNameInput.addEventListener('input', (e) => {
+                    if (itemErrorEl) itemErrorEl.classList.add('hidden');
+                    selectedIngredientId = null;
+                    showSuggestionsFor(e.target.value.toLowerCase().trim());
+                });
+
+                itemNameInput.addEventListener('keydown', (e) => {
+                    const children = Array.from(floating.children);
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        if (!children.length) return;
+                        selected = (selected + 1) % children.length;
+                        children.forEach((c, i) => c.classList.toggle('bg-gray-700', i === selected));
+                        children[selected].scrollIntoView({ block: 'nearest' });
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        if (!children.length) return;
+                        selected = (selected - 1 + children.length) % children.length;
+                        children.forEach((c, i) => c.classList.toggle('bg-gray-700', i === selected));
+                        children[selected].scrollIntoView({ block: 'nearest' });
+                    } else if (e.key === 'Enter') {
+                        if (selected >= 0 && children[selected]) {
+                            e.preventDefault();
+                            const row = children[selected];
+                            itemNameInput.value = row.dataset.name;
+                            selectedIngredientId = row.dataset.id || null;
+                            floating.style.display = 'none';
+                            itemNameInput.focus();
+                        }
+                    } else if (e.key === 'Escape') {
+                        floating.style.display = 'none';
+                    }
+                });
+
+                itemNameInput.addEventListener('blur', () => setTimeout(() => floating.style.display = 'none', 150));
+                itemNameInput.addEventListener('focus', () => {
+                    setPos();
+                    const q = itemNameInput.value.toLowerCase().trim();
+                    if (!q || itemNameInput.readOnly) { floating.style.display = 'none'; return; }
+                    showSuggestionsFor(q);
+                });
+            }
+
+            renderPantryList();
+
+            if (addItemForm && itemNameInput) {
+                addItemForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const name = itemNameInput.value.trim();
+                    if (!name) { itemNameInput.focus(); return; }
+
+                    if (itemErrorEl) itemErrorEl.classList.add('hidden');
+
+                    const quantity = itemQtyInput && itemQtyInput.value.trim() ? itemQtyInput.value.trim() : '1';
+                    const unit = itemUnitInput && itemUnitInput.value ? itemUnitInput.value : 'Count';
+                    const expirationValue = itemExpirationInput ? itemExpirationInput.value : '';
+                    const formattedExpiration = toDisplayDate(expirationValue);
+                    const updatedItem = {
+                        name,
+                        expiration: formattedExpiration,
+                        quantity,
+                        unit
+                    };
+
+                    if (editingItemIndex === null) {
+                        try {
+                            // Use ingredientId if user picked from dropdown, otherwise send name for backend resolution
+                            const body = selectedIngredientId
+                                ? { ingredientId: selectedIngredientId, quantity: parseFloat(quantity) || 1, unit, expirationDate: expirationValue || null }
+                                : { itemName: name, quantity: parseFloat(quantity) || 1, unit, expirationDate: expirationValue || null };
+
+                            const res = await fetch(`${API}/api/member/pantry/add`, {
+                                method: 'POST',
+                                credentials: 'include',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(body)
+                            });
+                            if (res.status === 401) { toggleModal(); return; }
+                            if (res.ok) {
+                                selectedIngredientId = null;
+                                closeAddItemModal();
+                                await loadPantry();
+                                return;
+                            } else {
+                                const errJson = await res.json().catch(() => ({}));
+                                if (itemErrorEl) {
+                                    itemErrorEl.textContent = errJson.error || 'Could not save item — is the database connected?';
+                                    itemErrorEl.classList.remove('hidden');
+                                }
+                                return;
+                            }
+                        } catch (e) {
+                            if (itemErrorEl) {
+                                itemErrorEl.textContent = 'Could not reach the server.';
+                                itemErrorEl.classList.remove('hidden');
+                            }
+                            return;
+                        }
+                    } else {
+                        pantryItems[editingItemIndex] = updatedItem;
+                    }
+
+                    addItemForm.reset();
+                    if (itemQtyInput) itemQtyInput.value = '1';
+                    if (itemUnitInput) itemUnitInput.value = 'Count';
+                    const nameInput = document.getElementById('itemName');
+                    if (nameInput) {
+                        nameInput.readOnly = false;
+                        nameInput.classList.remove('opacity-70', 'cursor-not-allowed');
+                    }
+                    editingItemIndex = null;
+                    const title = document.getElementById('addItemModalTitle');
+                    if (title) title.textContent = 'Add Item';
+                    const submitBtn = document.getElementById('addItemSubmitBtn');
+                    if (submitBtn) submitBtn.textContent = 'Add Item';
+                    renderPantryList();
+                    closeAddItemModal();
+                });
+            }
+
+            if (pantryList) {
+                pantryList.addEventListener('click', function(e) {
+                    const removeBtn = e.target.closest('[data-remove-index]');
+                    if (removeBtn) {
+                        const removeIndex = Number(removeBtn.getAttribute('data-remove-index'));
+                        removeItem(removeIndex);
+                        return;
+                    }
+
+                    const editBtn = e.target.closest('[data-edit-index]');
+                    if (editBtn) {
+                        const editIndex = Number(editBtn.getAttribute('data-edit-index'));
+                        editItem(editIndex);
+                    }
+                });
+            }
+        });
+    </script>
+    <script src="auth.js"></script>
+</body>
+</html>
