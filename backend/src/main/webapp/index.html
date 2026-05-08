@@ -188,6 +188,17 @@
           </div>
           <div id="inYourPantry" class="space-y-3"></div>
         </div>
+
+        <div id="savedSection" class="hidden rounded-3xl border border-gray-800 bg-gray-900 p-6 shadow-xl">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-sm text-gray-400">Bookmarked</p>
+              <h2 class="text-2xl font-bold">My Saved Recipes</h2>
+            </div>
+            <span class="text-xs rounded-full bg-yellow-500/10 text-yellow-300 border border-yellow-500/30 px-3 py-1">★ Saved</span>
+          </div>
+          <div id="savedRecipesList" class="space-y-3"></div>
+        </div>
       </div>
     </section>
   </main>
@@ -302,6 +313,15 @@
           recipes = ((j.data && j.data.recipes) || j.data || []).map(normalizeRecipe);
         }
       } catch (e) { /* server not running — recipes stays empty */ }
+      // Enrich top/trending with ingredient data from browse results so pantry match works
+      for (const arr of [trendingRecipes, topRecipes]) {
+        for (const tr of arr) {
+          if (!tr.ingredients.length) {
+            const full = recipes.find(r => r.id === tr.id);
+            if (full) tr.ingredients = full.ingredients;
+          }
+        }
+      }
       render();
     }
 
@@ -354,6 +374,8 @@
       clearFiltersBtn: document.getElementById('clearFiltersBtn'),
       selectedBadge: document.getElementById('selectedBadge'),
       guestBanner: document.getElementById('guestBanner'),
+      savedSection: document.getElementById('savedSection'),
+      savedRecipesList: document.getElementById('savedRecipesList'),
     };
 
     function normalize(text) {
@@ -361,6 +383,7 @@
     }
 
     function recipeMatchesPantry(recipe) {
+      if (!recipe.ingredients || !recipe.ingredients.length) return 0;
       const matches = recipe.ingredients.filter(i => pantryItems.includes(normalize(i)));
       return matches.length / recipe.ingredients.length;
     }
@@ -460,6 +483,30 @@
           </div>
         </button>
       `).join('');
+    }
+
+    async function renderSavedSection() {
+      if (!state.loggedIn) { els.savedSection.classList.add('hidden'); return; }
+      try {
+        const res = await fetch(`${API}/api/member/recipes/saved`, { credentials: 'include' });
+        if (!res.ok) { els.savedSection.classList.add('hidden'); return; }
+        const json = await res.json();
+        const saved = (json.data || []).map((r, i) => normalizeRecipe(r, i));
+        state.savedRecipes = new Set(saved.map(r => r.id));
+        if (!saved.length) { els.savedSection.classList.add('hidden'); return; }
+        els.savedSection.classList.remove('hidden');
+        els.savedRecipesList.innerHTML = saved.map(recipe => `
+          <button class="mini-recipe w-full text-left rounded-2xl border border-gray-800 bg-gray-950 p-4 hover:border-yellow-500/40 hover:bg-gray-900 transition" data-recipe-id="${recipe.id}">
+            <div class="flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <h3 class="font-semibold text-sm truncate">${recipe.title}</h3>
+                <p class="text-xs text-gray-400 mt-0.5">${recipe.cuisine || recipe.tags[0] || ''} · ${recipe.time || 0} min</p>
+              </div>
+              <span class="shrink-0 text-yellow-400 text-sm">★</span>
+            </div>
+          </button>
+        `).join('');
+      } catch (_) { els.savedSection.classList.add('hidden'); }
     }
 
     function renderPanel(recipe) {
@@ -633,18 +680,21 @@
           const id = btn.dataset.id;
           const action = btn.dataset.action;
           try {
-            if (action === 'like') {
+            if (action === 'like' || action === 'dislike') {
               await fetch(`${API}/api/member/recipes/${id}/like`, {
                 method: 'POST', credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ isLike: true })
+                body: JSON.stringify({ isLike: action === 'like' })
               });
-            } else if (action === 'dislike') {
-              await fetch(`${API}/api/member/recipes/${id}/like`, {
-                method: 'POST', credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ isLike: false })
-              });
+              // Fetch fresh counts from backend and update all arrays
+              const detailRes = await fetch(`${API}/api/recipes/${id}`, { credentials: 'include' });
+              if (detailRes.ok) {
+                const fresh = (await detailRes.json()).data;
+                for (const arr of [recipes, trendingRecipes, topRecipes]) {
+                  const r = arr.find(r => r.id === id);
+                  if (r) { r.likes = fresh.likes; r.dislikes = fresh.dislikes; }
+                }
+              }
             } else if (action === 'save') {
               const isSaved = state.savedRecipes.has(id);
               await fetch(`${API}/api/member/recipes/${id}/save`, {
@@ -652,13 +702,11 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ save: !isSaved })
               });
-              if (isSaved) state.savedRecipes.delete(id);
-              else state.savedRecipes.add(id);
+              renderSavedSection();
             }
           } catch (err) { /* ignore */ }
-          // Refresh detail panel counts from API
-          const numId = Number(id);
-          const recipe = [...recipes, ...trendingRecipes, ...topRecipes].find(r => r.id === id || r.id === numId);
+          // Re-render panel with updated data
+          const recipe = [...recipes, ...trendingRecipes, ...topRecipes].find(r => r.id === id);
           if (recipe) renderPanel(recipe);
         });
       });
@@ -794,16 +842,9 @@
       // Status label & guest banner
       els.sessionLabel.textContent = `Logged in as ${user.username}`;
       document.getElementById('guestBanner')?.classList.add('hidden');
-      // Load saved recipe IDs so Save buttons show correct state
-      try {
-        const savedRes = await fetch(`${API}/api/member/recipes/saved`, { credentials: 'include' });
-        if (savedRes.ok) {
-          const savedJson = await savedRes.json();
-          state.savedRecipes = new Set((savedJson.data || []).map(r => r.id));
-        }
-      } catch (_) {}
       loadPantryPreview();
       loadRecommendations();
+      renderSavedSection();
       render();
     };
     window.onAuthLogout = function() {
@@ -814,6 +855,7 @@
       document.getElementById('guestBanner')?.classList.remove('hidden');
       els.pantryPreview.innerHTML = '';
       els.inYourPantry.innerHTML = '';
+      els.savedSection.classList.add('hidden');
       render();
     };
 
