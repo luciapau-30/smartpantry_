@@ -351,6 +351,34 @@ public class RecipeDao {
         }
     }
 
+    // Idempotent: sets image_url for the 10 demo recipes where it is still NULL.
+    public void backfillImageUrls() {
+        String[][] images = {
+            {"rec-001", "https://images.unsplash.com/photo-1612874742237-6526221588e3?w=600&q=80"},
+            {"rec-002", "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=600&q=80"},
+            {"rec-003", "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&q=80"},
+            {"rec-004", "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&q=80"},
+            {"rec-005", "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600&q=80"},
+            {"rec-006", "https://images.unsplash.com/photo-1540189549336-e6e99eb49040?w=600&q=80"},
+            {"rec-007", "https://images.unsplash.com/photo-1551504734-5da073f5b756?w=600&q=80"},
+            {"rec-008", "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=600&q=80"},
+            {"rec-009", "https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=80"},
+            {"rec-010", "https://images.unsplash.com/photo-1512058533999-1429d3a3ec42?w=600&q=80"},
+        };
+        String sql = "UPDATE RECIPES SET image_url = ? WHERE id = ? AND image_url IS NULL";
+        try (Connection conn = JdbcConnectionFactory.openConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            for (String[] row : images) {
+                stmt.setString(1, row[1]);
+                stmt.setString(2, row[0]);
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     private RecipeRow mapRow(ResultSet rs) throws SQLException {
         RecipeRow r = new RecipeRow();
         r.setId(rs.getString("id"));

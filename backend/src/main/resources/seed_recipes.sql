@@ -18,45 +18,55 @@ INSERT IGNORE INTO USERS (id, username, email, password_hash, created_at, is_act
 -- ─────────────────────────────────────────────────────────────
 -- Recipes
 -- ─────────────────────────────────────────────────────────────
-INSERT IGNORE INTO RECIPES (id, author_id, title, description, prep_time_min, cook_time_min, servings, is_public, category_tags, created_at) VALUES
+INSERT IGNORE INTO RECIPES (id, author_id, title, description, image_url, prep_time_min, cook_time_min, servings, is_public, category_tags, created_at) VALUES
   ('rec-001','user-demo-001','Spaghetti Carbonara',
    'A classic Italian pasta dish with a silky egg and cheese sauce, crispy bacon, and freshly cracked black pepper.',
+   'https://images.unsplash.com/photo-1612874742237-6526221588e3?w=600&q=80',
    10, 20, 4, TRUE, 'Italian,Pasta', NOW()),
 
   ('rec-002','user-demo-001','Chicken Tacos',
    'Juicy spiced chicken in warm tortillas with fresh tomatoes, onion, and lime. A crowd-pleasing weeknight favorite.',
+   'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=600&q=80',
    15, 20, 4, TRUE, 'Mexican,High Protein', NOW()),
 
   ('rec-003','user-demo-001','Vegetable Stir Fry',
    'Crisp broccoli, bell pepper, and carrot tossed in garlic-ginger soy sauce and served over steamed rice.',
+   'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&q=80',
    10, 15, 4, TRUE, 'Asian,Vegetarian,Gluten Free', NOW()),
 
   ('rec-004','user-demo-001','Classic Omelette',
    'A perfectly folded omelette with melted cheese and your choice of vegetable filling. Ready in under 10 minutes.',
+   'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&q=80',
    5, 8, 1, TRUE, 'American,High Protein,Gluten Free', NOW()),
 
   ('rec-005','user-demo-001','Chicken Curry',
    'Tender chicken simmered in a fragrant coconut milk sauce with tomatoes, garlic, and warming spices.',
+   'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600&q=80',
    15, 30, 4, TRUE, 'Indian,High Protein,Gluten Free', NOW()),
 
   ('rec-006','user-demo-001','Greek Salad',
    'Sun-ripened tomatoes, cucumber, red onion, and feta in a bright olive oil and lemon dressing.',
+   'https://images.unsplash.com/photo-1540189549336-e6e99eb49040?w=600&q=80',
    10, 0, 4, TRUE, 'Mediterranean,Vegetarian,Gluten Free', NOW()),
 
   ('rec-007','user-demo-001','Ground Beef Tacos',
    'Seasoned ground beef with cumin and chili powder, loaded into tortillas with all your favorite toppings.',
+   'https://images.unsplash.com/photo-1551504734-5da073f5b756?w=600&q=80',
    10, 15, 4, TRUE, 'Mexican', NOW()),
 
   ('rec-008','user-demo-001','Garlic Butter Salmon',
    'Pan-seared salmon fillets finished in a rich garlic butter sauce with fresh lemon and thyme.',
+   'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=600&q=80',
    5, 12, 4, TRUE, 'American,High Protein,Gluten Free', NOW()),
 
   ('rec-009','user-demo-001','Red Lentil Soup',
    'Hearty and warming lentil soup with carrots, cumin, and paprika — naturally vegan and endlessly comforting.',
+   'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=80',
    10, 30, 6, TRUE, 'Mediterranean,Vegetarian,Vegan', NOW()),
 
   ('rec-010','user-demo-001','Shrimp Fried Rice',
    'Restaurant-style fried rice with plump shrimp, scrambled egg, and a savory soy sauce glaze.',
+   'https://images.unsplash.com/photo-1512058533999-1429d3a3ec42?w=600&q=80',
    10, 15, 4, TRUE, 'Asian,High Protein', NOW());
 
 -- ─────────────────────────────────────────────────────────────

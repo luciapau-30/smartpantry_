@@ -60,7 +60,9 @@ public final class SmartPantryBootstrapListener implements ServletContextListene
         if (useJdbc) {
             new IngredientDao().seedIfEmpty();
             new UserPreferenceDao().ensureTable();
-            new RecipeDao().seedIfEmpty();
+            RecipeDao recipeDao = new RecipeDao();
+            recipeDao.seedIfEmpty();
+            recipeDao.backfillImageUrls();
         }
 
         RecipeRepository recipeRepo;

@@ -184,6 +184,13 @@
                     </div>
                 </div>
 
+                <!-- Image URL -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Photo URL <span class="text-gray-600 font-normal">(optional)</span></label>
+                    <input id="recipeImageUrl" type="url" placeholder="https://..." class="w-full bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-purple-500 transition">
+                    <p class="text-xs text-gray-500 mt-1">Paste a link to a photo (e.g. from Unsplash). Leave blank to use a color banner.</p>
+                </div>
+
                 <!-- Public toggle -->
                 <div class="flex items-center gap-3">
                     <input id="recipeIsPublic" type="checkbox" checked class="w-4 h-4 accent-purple-500">
@@ -219,6 +226,18 @@
     <script>
         const API = 'http://localhost:8080/smartpantry';
         const COLORS = ['from-pink-500 to-orange-500','from-emerald-500 to-teal-500','from-cyan-500 to-blue-500','from-violet-500 to-fuchsia-500','from-rose-500 to-red-500','from-indigo-500 to-sky-500'];
+        const DEMO_IMAGES = {
+          'rec-001': 'https://images.unsplash.com/photo-1612874742237-6526221588e3?w=600&q=80',
+          'rec-002': 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=600&q=80',
+          'rec-003': 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&q=80',
+          'rec-004': 'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&q=80',
+          'rec-005': 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600&q=80',
+          'rec-006': 'https://images.unsplash.com/photo-1540189549336-e6e99eb49040?w=600&q=80',
+          'rec-007': 'https://images.unsplash.com/photo-1551504734-5da073f5b756?w=600&q=80',
+          'rec-008': 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=600&q=80',
+          'rec-009': 'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=80',
+          'rec-010': 'https://images.unsplash.com/photo-1512058533999-1429d3a3ec42?w=600&q=80',
+        };
 
         async function loadMyRecipes() {
             const grid = document.getElementById('recipesGrid');
@@ -234,11 +253,12 @@
                 }
                 grid.innerHTML = recipes.map((r, i) => {
                     const color = COLORS[i % COLORS.length];
+                    const img = r.imageUrl || r.image_url || DEMO_IMAGES[r.id] || '';
                     const tags = r.categoryTags ? r.categoryTags.split(',').map(t => t.trim()).filter(Boolean) : [];
                     const time = (r.prepTimeMin || 0) + (r.cookTimeMin || 0);
                     return `
                         <article class="rounded-3xl border border-gray-800 bg-gray-950 overflow-hidden">
-                            <div class="h-28 bg-gradient-to-br ${color} relative">
+                            <div class="h-28 ${img ? '' : 'bg-gradient-to-br ' + color} relative" style="${img ? 'background:url(' + img + ') center/cover no-repeat' : ''}">
                                 <div class="absolute inset-0 bg-black/15"></div>
                                 <div class="absolute bottom-3 left-3 flex gap-2 flex-wrap">
                                     ${tags.slice(0,2).map(t => `<span class="text-[11px] rounded-full border border-white/20 bg-black/25 px-2 py-1">${t}</span>`).join('')}
@@ -272,11 +292,12 @@
                 section?.classList.remove('hidden');
                 grid.innerHTML = recipes.map((r, i) => {
                     const color = COLORS[i % COLORS.length];
+                    const img = r.imageUrl || r.image_url || DEMO_IMAGES[r.id] || '';
                     const tags = r.categoryTags ? r.categoryTags.split(',').map(t => t.trim()).filter(Boolean) : [];
                     const time = (r.prepTimeMin || 0) + (r.cookTimeMin || 0);
                     return `
                         <article class="rounded-3xl border border-gray-800 bg-gray-950 overflow-hidden">
-                            <div class="h-28 bg-gradient-to-br ${color} relative">
+                            <div class="h-28 ${img ? '' : 'bg-gradient-to-br ' + color} relative" style="${img ? 'background:url(' + img + ') center/cover no-repeat' : ''}">
                                 <div class="absolute inset-0 bg-black/15"></div>
                                 <div class="absolute bottom-3 left-3 flex gap-2 flex-wrap">
                                     ${tags.slice(0,2).map(t => `<span class="text-[11px] rounded-full border border-white/20 bg-black/25 px-2 py-1">${t}</span>`).join('')}
@@ -526,6 +547,7 @@
             const cookTimeMin = parseInt(document.getElementById('recipeCookTime').value) || 0;
             const servings = parseInt(document.getElementById('recipeServings').value) || 1;
             const isPublic = document.getElementById('recipeIsPublic').checked;
+            const imageUrl = document.getElementById('recipeImageUrl').value.trim();
 
             // Collect ingredients
             const ingredients = [];
@@ -565,7 +587,7 @@
                 return;
             }
 
-            const body = { title, cuisineType, description, prepTimeMin, cookTimeMin, servings, isPublic, ingredients, instructions };
+            const body = { title, cuisineType, description, prepTimeMin, cookTimeMin, servings, isPublic, imageUrl: imageUrl || null, ingredients, instructions };
 
             const btn = document.getElementById('uploadSubmitBtn');
             btn.disabled = true;

@@ -240,6 +240,18 @@
   <script>
     const API = 'http://localhost:8080/smartpantry';
     const COLORS = ['from-pink-500 to-orange-500','from-emerald-500 to-teal-500','from-cyan-500 to-blue-500','from-violet-500 to-fuchsia-500','from-rose-500 to-red-500','from-indigo-500 to-sky-500'];
+    const DEMO_IMAGES = {
+      'rec-001': 'https://images.unsplash.com/photo-1612874742237-6526221588e3?w=600&q=80',
+      'rec-002': 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=600&q=80',
+      'rec-003': 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&q=80',
+      'rec-004': 'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=600&q=80',
+      'rec-005': 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=600&q=80',
+      'rec-006': 'https://images.unsplash.com/photo-1540189549336-e6e99eb49040?w=600&q=80',
+      'rec-007': 'https://images.unsplash.com/photo-1551504734-5da073f5b756?w=600&q=80',
+      'rec-008': 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=600&q=80',
+      'rec-009': 'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&q=80',
+      'rec-010': 'https://images.unsplash.com/photo-1512058533999-1429d3a3ec42?w=600&q=80',
+    };
 
     let pantryItems = [];
     let recipes = [];
@@ -264,6 +276,7 @@
         rating: r.likes > 0 ? Math.min(5, 3.5 + r.likes / 100) : 0,
         time: (r.prepTimeMin || 0) + (r.cookTimeMin || 0),
         summary: r.description || r.summary || '',
+        image: r.imageUrl || r.image_url || DEMO_IMAGES[r.id] || '',
         color: COLORS[idx % COLORS.length],
         commentsThread: []
       };
@@ -394,7 +407,7 @@
       const badgeClass = saved ? 'bg-purple-500/15 text-purple-300 border-purple-500/30' : 'bg-gray-800 text-gray-300 border-gray-700';
       return `
         <article class="group rounded-3xl border border-gray-800 bg-gray-950 overflow-hidden hover:border-purple-500/40 hover:shadow-2xl transition cursor-pointer ${selected}" data-recipe-id="${recipe.id}">
-          <div class="h-28 bg-gradient-to-br ${recipe.color} relative">
+          <div class="h-28 relative ${recipe.image ? '' : 'bg-gradient-to-br ' + recipe.color}" style="${recipe.image ? 'background:url(' + recipe.image + ') center/cover no-repeat' : ''}">
             <div class="absolute inset-0 bg-black/15"></div>
             <div class="absolute bottom-3 left-3 flex gap-2 flex-wrap">
               ${recipe.tags.slice(0, 2).map(tag => `<span class="text-[11px] rounded-full border border-white/20 bg-black/25 px-2 py-1 backdrop-blur-sm">${tag}</span>`).join('')}
@@ -462,7 +475,7 @@
 
       els.detailPanel.innerHTML = `
         <div class="rounded-2xl border border-gray-800 overflow-hidden">
-          <div class="h-40 bg-gradient-to-br ${recipe.color} relative">
+          <div class="h-40 relative ${recipe.image ? '' : 'bg-gradient-to-br ' + recipe.color}" style="${recipe.image ? 'background:url(' + recipe.image + ') center/cover no-repeat' : ''}">
             <div class="absolute inset-0 bg-black/20"></div>
             <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
               <div>
@@ -581,6 +594,7 @@
               const qty = i.quantity ? `${i.quantity}${i.unit ? ' ' + i.unit : ''}` : '';
               return qty ? `${qty} ${name}` : name;
             }).filter(Boolean),
+            image: detail.recipe?.imageUrl || (base ? base.image : '') || DEMO_IMAGES[detail.recipe?.id] || '',
             time: (detail.recipe?.prepTimeMin || 0) + (detail.recipe?.cookTimeMin || 0),
             steps: detail.steps || [],
             likes: detail.likes ?? (base ? base.likes : 0),
