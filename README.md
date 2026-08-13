@@ -35,6 +35,10 @@ A community-driven pantry and recipe management web app. Track what's in your ki
 
 ---
 
+## Demo available here : https://youtu.be/vEIm5NRgVd0 
+
+---
+
 ## Project Structure
 
 ```
