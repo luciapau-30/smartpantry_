@@ -5,6 +5,16 @@ A community-driven pantry and recipe management web app. Track what's in your ki
 
 ---
 
+## My role (Lucia Paulino)
+
+This was a six-person team project. I was the top contributor (35 of about 57 commits). What I built:
+
+- **Recommendation engine** (`recommendation/`): ranks every public recipe by a weighted score combining pantry coverage, the user's cuisine preferences, and community popularity, and reports missing required ingredients for each recipe
+- **Background expiry job and WebSocket alerts:** a thread pool that checks for expiring pantry items every 10 minutes and pushes live alerts to `/ws/pantry`
+- **REST endpoints** for pantry items, recipe detail, comments, likes and saves, trending and top recipes
+- **Make Recipe, shopping list, guest demo, preferences and ingredient synonym matching**
+- **Integration:** ported a teammate's DAO layer into the Maven backend, merged the team's branches, wired the frontend to the live APIs, and wrote the database schema, seed data and this README
+
 ## Features
 
 - **Pantry tracking** — Add items with name, quantity, unit, and expiration date. Import via CSV or text paste.
@@ -35,7 +45,9 @@ A community-driven pantry and recipe management web app. Track what's in your ki
 
 ---
 
-## Demo available here : https://youtu.be/vEIm5NRgVd0 
+## Demo
+
+[Watch the demo video](https://youtu.be/vEIm5NRgVd0)
 
 ---
 
